@@ -5,9 +5,8 @@ import { axisProps, chartColors, gridProps, tooltipStyle } from '../components/c
 import { useData } from '../store/DataContext'
 import { monthlyFinance, weeklyProduction } from '../data/demoData'
 import { formatDate, formatINR, formatINRCompact, formatNumber } from '../utils/format'
-import type { PageProps } from '../navigation'
 
-export function Dashboard({ onNavigate }: PageProps) {
+export function Dashboard({ onNavigate }) {
   const { orders, machines, materials, inspections, isLowStock, settings } = useData()
 
   const activeOrders = orders.filter((o) => ['Pending', 'In Production', 'Quality Check', 'Ready'].includes(o.status))
@@ -18,7 +17,7 @@ export function Dashboard({ onNavigate }: PageProps) {
   const month = monthlyFinance[monthlyFinance.length - 2] // last full month
   const margin = Math.round((month.profit / month.revenue) * 100)
 
-  const statusCounts = (['Running', 'Idle', 'Maintenance', 'Breakdown'] as const).map((s) => ({
+  const statusCounts = (['Running', 'Idle', 'Maintenance', 'Breakdown']).map((s) => ({
     status: s,
     count: machines.filter((m) => m.status === s).length,
   }))
@@ -52,7 +51,7 @@ export function Dashboard({ onNavigate }: PageProps) {
               <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid {...gridProps} />
                 <XAxis dataKey="day" {...axisProps} />
-                <YAxis {...axisProps} width={48} tickFormatter={(v: number) => `${v / 1000}k`} />
+                <YAxis {...axisProps} width={48} tickFormatter={(v) => `${v / 1000}k`} />
                 <Tooltip {...tooltipStyle} formatter={(v) => `${formatNumber(Number(v))} m`} />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="actual" name="Actual output" fill={chartColors.teal} radius={[4, 4, 0, 0]} maxBarSize={36} />

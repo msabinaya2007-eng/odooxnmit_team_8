@@ -4,14 +4,14 @@ import { CircleCheck, Download, FileText, IndianRupee, Receipt, TrendingDown, Tr
 import { Badge, Card, DataTable, DemoTag, PageHeader, Segmented, StatCard } from '../components/ui'
 import { axisProps, categorical, chartColors, gridProps, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
-import { expenseBreakdown, monthlyFinance, type InvoiceStatus } from '../data/demoData'
+import { expenseBreakdown, monthlyFinance } from '../data/demoData'
 import { downloadCSV, formatDate, formatINR, formatINRCompact } from '../utils/format'
 
-const INVOICE_STATUSES: InvoiceStatus[] = ['Unpaid', 'Overdue', 'Paid']
+const INVOICE_STATUSES = ['Unpaid', 'Overdue', 'Paid']
 
 export function Finance() {
   const { invoices, setInvoices, orders, workers, materials, notify } = useData()
-  const [invStatus, setInvStatus] = useState<InvoiceStatus | 'All'>('All')
+  const [invStatus, setInvStatus] = useState('All')
 
   const full = monthlyFinance.slice(0, -1) // completed months
   const last = full[full.length - 1]
@@ -24,7 +24,7 @@ export function Finance() {
 
   const shownInvoices = useMemo(() => invoices.filter((i) => invStatus === 'All' || i.status === invStatus), [invoices, invStatus])
 
-  const markPaid = (id: string) => {
+  const markPaid = (id) => {
     setInvoices((p) => p.map((i) => (i.id === id ? { ...i, status: 'Paid' } : i)))
     notify(`${id} marked as paid`)
   }
@@ -80,7 +80,7 @@ export function Finance() {
                 </defs>
                 <CartesianGrid {...gridProps} />
                 <XAxis dataKey="month" {...axisProps} />
-                <YAxis {...axisProps} width={56} tickFormatter={(v: number) => formatINRCompact(v)} />
+                <YAxis {...axisProps} width={56} tickFormatter={(v) => formatINRCompact(v)} />
                 <Tooltip {...tooltipStyle} formatter={(v) => formatINR(Number(v))} />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                 <Area type="monotone" dataKey="revenue" name="Revenue" stroke={chartColors.navy} strokeWidth={2} fill="url(#gRev)" />
@@ -112,7 +112,7 @@ export function Finance() {
           <Segmented
             value={invStatus}
             onChange={setInvStatus}
-            options={[{ value: 'All' as const, label: 'All', count: invoices.length }, ...INVOICE_STATUSES.map((s) => ({ value: s, label: s, count: invoices.filter((i) => i.status === s).length }))]}
+            options={[{ value: 'All', label: 'All', count: invoices.length }, ...INVOICE_STATUSES.map((s) => ({ value: s, label: s, count: invoices.filter((i) => i.status === s).length }))]}
           />
           <DataTable
             rows={shownInvoices}

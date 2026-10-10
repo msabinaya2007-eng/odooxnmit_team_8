@@ -1,21 +1,21 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { CircleCheck, CircleX, ClipboardList, Plus, RotateCcw, ShieldCheck } from 'lucide-react'
 import { Badge, Card, DataTable, DemoTag, Field, Modal, PageHeader, SearchInput, Segmented, StatCard, Toolbar } from '../components/ui'
 import { axisProps, chartColors, gridProps, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
-import { DEMO_TODAY, type Inspection, type InspectionResult } from '../data/demoData'
+import { DEMO_TODAY } from '../data/demoData'
 import { formatDate, matchesSearch } from '../utils/format'
 
-const RESULTS: InspectionResult[] = ['Pending', 'Passed', 'Failed', 'Rework']
+const RESULTS = ['Pending', 'Passed', 'Failed', 'Rework']
 const DEFECT_TYPES = ['—', 'Broken pick', 'Float', 'Slub', 'Shade variation', 'Stain', 'Holes / Snags', 'Print misregistration', 'Stitching defect']
 
 export function QualityControl() {
   const { inspections, setInspections, batches, workers, notify } = useData()
   const [query, setQuery] = useState('')
-  const [result, setResult] = useState<InspectionResult | 'All'>('All')
-  const [recording, setRecording] = useState<Inspection | null>(null)
-  const [form, setForm] = useState({ defects: '0', defectType: '—', result: 'Passed' as InspectionResult })
+  const [result, setResult] = useState('All')
+  const [recording, setRecording] = useState(null)
+  const [form, setForm] = useState({ defects: '0', defectType: '—', result: 'Passed' })
   const [newOpen, setNewOpen] = useState(false)
   const [newForm, setNewForm] = useState({ batchId: '', inspector: '', sampleSize: '200' })
 
@@ -32,15 +32,15 @@ export function QualityControl() {
   const defectRate = totalSampled ? ((completed.reduce((s, i) => s + i.defects, 0) / totalSampled) * 100).toFixed(1) : '0'
 
   const defectChart = Object.entries(
-    completed.filter((i) => i.defectType !== '—').reduce<Record<string, number>>((acc, i) => ({ ...acc, [i.defectType]: (acc[i.defectType] ?? 0) + i.defects }), {}),
+    completed.filter((i) => i.defectType !== '—').reduce((acc, i) => ({ ...acc, [i.defectType]: (acc[i.defectType] ?? 0) + i.defects }), {}),
   ).map(([type, count]) => ({ type, count })).sort((a, b) => b.count - a.count)
 
-  const openRecord = (i: Inspection) => {
+  const openRecord = (i) => {
     setRecording(i)
     setForm({ defects: '0', defectType: '—', result: 'Passed' })
   }
 
-  const saveRecord = (e: FormEvent) => {
+  const saveRecord = (e) => {
     e.preventDefault()
     if (!recording) return
     setInspections((prev) => prev.map((i) => (i.id === recording.id ? { ...i, defects: Number(form.defects), defectType: form.defectType, result: form.result, date: DEMO_TODAY } : i)))
@@ -48,11 +48,11 @@ export function QualityControl() {
     setRecording(null)
   }
 
-  const createInspection = (e: FormEvent) => {
+  const createInspection = (e) => {
     e.preventDefault()
     const batch = batches.find((b) => b.id === newForm.batchId)
     const next = Math.max(...inspections.map((i) => Number(i.id.split('-')[1]))) + 1
-    const insp: Inspection = {
+    const insp = {
       id: `QC-${next}`,
       batchId: newForm.batchId,
       product: batch?.product ?? '—',
@@ -91,7 +91,7 @@ export function QualityControl() {
           <Segmented
             value={result}
             onChange={setResult}
-            options={[{ value: 'All' as const, label: 'All', count: inspections.length }, ...RESULTS.map((r) => ({ value: r, label: r, count: inspections.filter((i) => i.result === r).length }))]}
+            options={[{ value: 'All', label: 'All', count: inspections.length }, ...RESULTS.map((r) => ({ value: r, label: r, count: inspections.filter((i) => i.result === r).length }))]}
           />
           <DataTable
             rows={filtered}
@@ -141,7 +141,7 @@ export function QualityControl() {
             </Field>
             <Field label="Result" full>
               <div className="status-picker">
-                {(['Passed', 'Rework', 'Failed'] as const).map((r) => (
+                {(['Passed', 'Rework', 'Failed']).map((r) => (
                   <button key={r} type="button" className={`btn ${form.result === r ? 'primary' : 'secondary'}`} onClick={() => setForm({ ...form, result: r })}>{r}</button>
                 ))}
               </div>

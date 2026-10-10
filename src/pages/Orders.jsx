@@ -1,23 +1,23 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { Download, Pencil, Plus } from 'lucide-react'
 import { Badge, Card, DataTable, DemoTag, Field, Modal, PageHeader, SearchInput, Segmented, SelectFilter, Toolbar } from '../components/ui'
 import { useData } from '../store/DataContext'
-import { DEMO_TODAY, type Order, type OrderStatus, type Priority } from '../data/demoData'
+import { DEMO_TODAY } from '../data/demoData'
 import { downloadCSV, formatDate, formatINR, formatNumber, matchesSearch } from '../utils/format'
 
-const STATUSES: OrderStatus[] = ['Pending', 'In Production', 'Quality Check', 'Ready', 'Dispatched', 'Cancelled']
-const PRIORITIES: Priority[] = ['High', 'Medium', 'Low']
+const STATUSES = ['Pending', 'In Production', 'Quality Check', 'Ready', 'Dispatched', 'Cancelled']
+const PRIORITIES = ['High', 'Medium', 'Low']
 
-const emptyForm = { customer: '', product: '', fabric: '', quantity: '', unit: 'm' as Order['unit'], dueDate: '', priority: 'Medium' as Priority, value: '' }
+const emptyForm = { customer: '', product: '', fabric: '', quantity: '', unit: 'm', dueDate: '', priority: 'Medium', value: '' }
 
 export function Orders() {
   const { orders, setOrders, notify } = useData()
   const [query, setQuery] = useState('')
-  const [status, setStatus] = useState<OrderStatus | 'All'>('All')
-  const [priority, setPriority] = useState<Priority | 'All'>('All')
+  const [status, setStatus] = useState('All')
+  const [priority, setPriority] = useState('All')
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState(emptyForm)
-  const [editing, setEditing] = useState<Order | null>(null)
+  const [editing, setEditing] = useState(null)
 
   const filtered = useMemo(
     () => orders.filter((o) =>
@@ -29,10 +29,10 @@ export function Orders() {
 
   const totalValue = filtered.reduce((s, o) => s + o.value, 0)
 
-  const submit = (e: FormEvent) => {
+  const submit = (e) => {
     e.preventDefault()
     const nextNum = Math.max(...orders.map((o) => Number(o.id.split('-')[1]))) + 1
-    const order: Order = {
+    const order = {
       id: `ORD-${nextNum}`,
       customer: form.customer.trim(),
       product: form.product.trim(),
@@ -51,13 +51,13 @@ export function Orders() {
     notify(`Order ${order.id} created (demo — not saved to a database)`)
   }
 
-  const updateStatus = (id: string, next: OrderStatus) => {
+  const updateStatus = (id, next) => {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: next } : o)))
     setEditing(null)
     notify(`${id} status changed to ${next}`)
   }
 
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }))
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
 
   return (
     <>
@@ -83,7 +83,7 @@ export function Orders() {
         <Segmented
           value={status}
           onChange={setStatus}
-          options={[{ value: 'All' as const, label: 'All', count: orders.length }, ...STATUSES.map((s) => ({ value: s, label: s, count: orders.filter((o) => o.status === s).length }))]}
+          options={[{ value: 'All', label: 'All', count: orders.length }, ...STATUSES.map((s) => ({ value: s, label: s, count: orders.filter((o) => o.status === s).length }))]}
         />
         <DataTable
           rows={filtered}
@@ -114,11 +114,11 @@ export function Orders() {
           <Field label="Product"><input required value={form.product} onChange={(e) => set('product', e.target.value)} placeholder="e.g. Oxford Shirting" /></Field>
           <Field label="Fabric / composition"><input value={form.fabric} onChange={(e) => set('fabric', e.target.value)} placeholder="e.g. Cotton 40s" /></Field>
           <Field label="Priority">
-            <select value={form.priority} onChange={(e) => set('priority', e.target.value as Priority)}>{PRIORITIES.map((p) => <option key={p}>{p}</option>)}</select>
+            <select value={form.priority} onChange={(e) => set('priority', e.target.value)}>{PRIORITIES.map((p) => <option key={p}>{p}</option>)}</select>
           </Field>
           <Field label="Quantity"><input required type="number" min={1} value={form.quantity} onChange={(e) => set('quantity', e.target.value)} /></Field>
           <Field label="Unit">
-            <select value={form.unit} onChange={(e) => set('unit', e.target.value as Order['unit'])}><option value="m">Metres</option><option value="pcs">Pieces</option></select>
+            <select value={form.unit} onChange={(e) => set('unit', e.target.value)}><option value="m">Metres</option><option value="pcs">Pieces</option></select>
           </Field>
           <Field label="Due date"><input required type="date" min={DEMO_TODAY} value={form.dueDate} onChange={(e) => set('dueDate', e.target.value)} /></Field>
           <Field label="Order value (₹)"><input required type="number" min={0} value={form.value} onChange={(e) => set('value', e.target.value)} /></Field>

@@ -1,17 +1,17 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { Bell, Building2, Database, RotateCcw, Save, SlidersHorizontal } from 'lucide-react'
 import { Card, Field, PageHeader, Toggle } from '../components/ui'
-import { useData, type AppSettings } from '../store/DataContext'
+import { useData } from '../store/DataContext'
 
 export function SettingsPage() {
   const { settings, setSettings, resetDemoData, notify } = useData()
-  const [draft, setDraft] = useState<AppSettings>(settings)
+  const [draft, setDraft] = useState(settings)
   const [confirmReset, setConfirmReset] = useState(false)
 
-  const set = <K extends keyof AppSettings>(k: K, v: AppSettings[K]) => setDraft((d) => ({ ...d, [k]: v }))
+  const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }))
   const dirty = JSON.stringify(draft) !== JSON.stringify(settings)
 
-  const save = (e: FormEvent) => {
+  const save = (e) => {
     e.preventDefault()
     setSettings(draft)
     notify('Settings saved for this session')

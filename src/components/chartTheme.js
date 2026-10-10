@@ -17,9 +17,9 @@ export const axisProps = {
   tick: { fill: '#64748b', fontSize: 12 },
   tickLine: false,
   axisLine: false,
-} as const
+}
 
-export const gridProps = { stroke: '#e2e8f0', strokeDasharray: '3 3', vertical: false } as const
+export const gridProps = { stroke: '#e2e8f0', strokeDasharray: '3 3', vertical: false }
 
 export const tooltipStyle = {
   contentStyle: { borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15,35,64,.08)', fontSize: 13 },

@@ -1,21 +1,7 @@
-import { createContext, useCallback, useContext, useMemo, useState, type Dispatch as SetState, type ReactNode, type SetStateAction } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import * as demo from '../data/demoData'
 
-export interface AppSettings {
-  companyName: string
-  plantLocation: string
-  gstin: string
-  contactEmail: string
-  shiftStart: string
-  dailyTarget: number
-  lowStockBuffer: number
-  notifyLowStock: boolean
-  notifyBreakdown: boolean
-  notifyQcFail: boolean
-  notifyOverdue: boolean
-}
-
-const defaultSettings: AppSettings = {
+const defaultSettings = {
   companyName: 'LoomFlow Demo Textiles',
   plantLocation: 'Demo Industrial Estate, Coimbatore',
   gstin: '33AAAAA0000A1Z5 (demo)',
@@ -29,43 +15,11 @@ const defaultSettings: AppSettings = {
   notifyOverdue: false,
 }
 
-interface Toast {
-  id: number
-  message: string
-}
-
-interface DataState {
-  orders: demo.Order[]
-  setOrders: SetState<SetStateAction<demo.Order[]>>
-  materials: demo.Material[]
-  setMaterials: SetState<SetStateAction<demo.Material[]>>
-  machines: demo.Machine[]
-  setMachines: SetState<SetStateAction<demo.Machine[]>>
-  batches: demo.Batch[]
-  setBatches: SetState<SetStateAction<demo.Batch[]>>
-  inspections: demo.Inspection[]
-  setInspections: SetState<SetStateAction<demo.Inspection[]>>
-  finishedGoods: demo.FinishedGood[]
-  setFinishedGoods: SetState<SetStateAction<demo.FinishedGood[]>>
-  dispatches: demo.Dispatch[]
-  setDispatches: SetState<SetStateAction<demo.Dispatch[]>>
-  workers: demo.Worker[]
-  setWorkers: SetState<SetStateAction<demo.Worker[]>>
-  invoices: demo.Invoice[]
-  setInvoices: SetState<SetStateAction<demo.Invoice[]>>
-  settings: AppSettings
-  setSettings: SetState<SetStateAction<AppSettings>>
-  isLowStock: (m: demo.Material) => boolean
-  toasts: Toast[]
-  notify: (message: string) => void
-  resetDemoData: () => AppSettings
-}
-
-const DataContext = createContext<DataState | null>(null)
+const DataContext = createContext(null)
 
 let toastSeq = 0
 
-export function DataProvider({ children }: { children: ReactNode }) {
+export function DataProvider({ children }) {
   const [orders, setOrders] = useState(demo.orders)
   const [materials, setMaterials] = useState(demo.materials)
   const [machines, setMachines] = useState(demo.machines)
@@ -76,16 +30,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [workers, setWorkers] = useState(demo.workers)
   const [invoices, setInvoices] = useState(demo.invoices)
   const [settings, setSettings] = useState(defaultSettings)
-  const [toasts, setToasts] = useState<Toast[]>([])
+  const [toasts, setToasts] = useState([])
 
-  const notify = useCallback((message: string) => {
+  const notify = useCallback((message) => {
     const id = ++toastSeq
     setToasts((t) => [...t, { id, message }])
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3000)
   }, [])
 
   const isLowStock = useCallback(
-    (m: demo.Material) => m.stock <= m.reorderLevel * (1 + settings.lowStockBuffer / 100),
+    (m) => m.stock <= m.reorderLevel * (1 + settings.lowStockBuffer / 100),
     [settings.lowStockBuffer],
   )
 
@@ -103,7 +57,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return defaultSettings
   }, [])
 
-  const value = useMemo<DataState>(
+  const value = useMemo(
     () => ({
       orders, setOrders, materials, setMaterials, machines, setMachines, batches, setBatches,
       inspections, setInspections, finishedGoods, setFinishedGoods, dispatches, setDispatches,

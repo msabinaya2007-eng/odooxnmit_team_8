@@ -4,17 +4,16 @@ import { Download, Layers, PackageCheck, Warehouse } from 'lucide-react'
 import { Badge, Card, DataTable, DemoTag, PageHeader, SearchInput, SelectFilter, StatCard, Toolbar } from '../components/ui'
 import { categorical, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
-import type { FinishedGood } from '../data/demoData'
 import { downloadCSV, formatINR, formatINRCompact, formatNumber, matchesSearch } from '../utils/format'
 
-const CATEGORIES: FinishedGood['category'][] = ['Shirting', 'Suiting', 'Home Textile', 'Knitwear', 'Denim']
-const WAREHOUSES: FinishedGood['warehouse'][] = ['WH-A Coimbatore', 'WH-B Tiruppur', 'WH-C Erode']
+const CATEGORIES = ['Shirting', 'Suiting', 'Home Textile', 'Knitwear', 'Denim']
+const WAREHOUSES = ['WH-A Coimbatore', 'WH-B Tiruppur', 'WH-C Erode']
 
 export function FinishedGoods() {
   const { finishedGoods } = useData()
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState<FinishedGood['category'] | 'All'>('All')
-  const [warehouse, setWarehouse] = useState<FinishedGood['warehouse'] | 'All'>('All')
+  const [category, setCategory] = useState('All')
+  const [warehouse, setWarehouse] = useState('All')
 
   const filtered = useMemo(
     () => finishedGoods.filter((g) =>

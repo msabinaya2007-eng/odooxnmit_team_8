@@ -1,15 +1,15 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Clock, Plus, UserCheck, Users, UserX } from 'lucide-react'
 import { Badge, Card, DataTable, DemoTag, Field, Modal, PageHeader, SearchInput, SelectFilter, StatCard, Toolbar } from '../components/ui'
 import { axisProps, chartColors, gridProps, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
-import { weeklyAttendance, type AttendanceStatus, type Worker } from '../data/demoData'
+import { weeklyAttendance } from '../data/demoData'
 import { formatINR, matchesSearch } from '../utils/format'
 
-const DEPARTMENTS: Worker['department'][] = ['Weaving', 'Dyeing', 'Stitching', 'Quality', 'Warehouse', 'Maintenance']
-const SHIFTS: Worker['shift'][] = ['Morning', 'Evening', 'Night']
-const ATTENDANCE: AttendanceStatus[] = ['Present', 'Late', 'Absent', 'On Leave']
+const DEPARTMENTS = ['Weaving', 'Dyeing', 'Stitching', 'Quality', 'Warehouse', 'Maintenance']
+const SHIFTS = ['Morning', 'Evening', 'Night']
+const ATTENDANCE = ['Present', 'Late', 'Absent', 'On Leave']
 
 function nowHHMM() {
   const d = new Date()
@@ -19,29 +19,29 @@ function nowHHMM() {
 export function Workers() {
   const { workers, setWorkers, notify } = useData()
   const [query, setQuery] = useState('')
-  const [dept, setDept] = useState<Worker['department'] | 'All'>('All')
-  const [shift, setShift] = useState<Worker['shift'] | 'All'>('All')
+  const [dept, setDept] = useState('All')
+  const [shift, setShift] = useState('All')
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({ name: '', role: '', department: 'Weaving' as Worker['department'], shift: 'Morning' as Worker['shift'], dailyWage: '' })
+  const [form, setForm] = useState({ name: '', role: '', department: 'Weaving', shift: 'Morning', dailyWage: '' })
 
   const filtered = useMemo(
     () => workers.filter((w) => (dept === 'All' || w.department === dept) && (shift === 'All' || w.shift === shift) && matchesSearch(query, w.id, w.name, w.role)),
     [workers, dept, shift, query],
   )
 
-  const count = (s: AttendanceStatus) => workers.filter((w) => w.status === s).length
+  const count = (s) => workers.filter((w) => w.status === s).length
   const onFloor = count('Present') + count('Late')
   const todayChart = [...weeklyAttendance, { day: 'Today', present: onFloor, absent: workers.length - onFloor }]
 
-  const mark = (w: Worker, status: AttendanceStatus) => {
+  const mark = (w, status) => {
     setWorkers((prev) => prev.map((x) => (x.id === w.id ? { ...x, status, checkIn: status === 'Present' || status === 'Late' ? (x.checkIn !== '—' ? x.checkIn : nowHHMM()) : '—' } : x)))
     notify(`${w.name} marked ${status}`)
   }
 
-  const submit = (e: FormEvent) => {
+  const submit = (e) => {
     e.preventDefault()
     const next = Math.max(...workers.map((w) => Number(w.id.split('-')[1]))) + 1
-    const w: Worker = {
+    const w = {
       id: `EMP-${next}`,
       name: form.name.trim(),
       role: form.role.trim(),
@@ -93,7 +93,7 @@ export function Workers() {
               { key: 'st', header: 'Status', render: (w) => <Badge>{w.status}</Badge> },
               {
                 key: 'mark', header: 'Mark', render: (w) => (
-                  <select className="compact-select" value={w.status} onChange={(e) => mark(w, e.target.value as AttendanceStatus)} aria-label={`Attendance for ${w.name}`}>
+                  <select className="compact-select" value={w.status} onChange={(e) => mark(w, e.target.value)} aria-label={`Attendance for ${w.name}`}>
                     {ATTENDANCE.map((a) => <option key={a}>{a}</option>)}
                   </select>
                 ),
@@ -136,10 +136,10 @@ export function Workers() {
           <Field label="Full name"><input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
           <Field label="Role"><input required value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder="e.g. Loom Operator" /></Field>
           <Field label="Department">
-            <select value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value as Worker['department'] })}>{DEPARTMENTS.map((d) => <option key={d}>{d}</option>)}</select>
+            <select value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })}>{DEPARTMENTS.map((d) => <option key={d}>{d}</option>)}</select>
           </Field>
           <Field label="Shift">
-            <select value={form.shift} onChange={(e) => setForm({ ...form, shift: e.target.value as Worker['shift'] })}>{SHIFTS.map((s) => <option key={s}>{s}</option>)}</select>
+            <select value={form.shift} onChange={(e) => setForm({ ...form, shift: e.target.value })}>{SHIFTS.map((s) => <option key={s}>{s}</option>)}</select>
           </Field>
           <Field label="Daily wage (₹)"><input required type="number" min={0} value={form.dailyWage} onChange={(e) => setForm({ ...form, dailyWage: e.target.value })} /></Field>
         </form>

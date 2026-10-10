@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState, type ReactElement } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { CircleCheck } from 'lucide-react'
 import { Sidebar } from './components/Sidebar'
 import { Topbar } from './components/Topbar'
 import { DataProvider, useData } from './store/DataContext'
-import { isPageId, navItems, type PageId } from './navigation'
+import { isPageId, navItems } from './navigation'
 import { Dashboard } from './pages/Dashboard'
 import { Orders } from './pages/Orders'
 import { Inventory } from './pages/Inventory'
@@ -16,7 +16,7 @@ import { Finance } from './pages/Finance'
 import { SettingsPage } from './pages/Settings'
 import './App.css'
 
-const pages: Record<PageId, (props: { onNavigate: (id: PageId) => void }) => ReactElement> = {
+const pages = {
   dashboard: Dashboard,
   orders: Orders,
   inventory: Inventory,
@@ -29,13 +29,13 @@ const pages: Record<PageId, (props: { onNavigate: (id: PageId) => void }) => Rea
   settings: SettingsPage,
 }
 
-function readHash(): PageId {
+function readHash() {
   const id = window.location.hash.replace(/^#\/?/, '')
   return isPageId(id) ? id : 'dashboard'
 }
 
 function Shell() {
-  const [page, setPage] = useState<PageId>(readHash)
+  const [page, setPage] = useState(readHash)
   const [menuOpen, setMenuOpen] = useState(false)
   const { toasts } = useData()
 
@@ -45,7 +45,7 @@ function Shell() {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  const navigate = useCallback((id: PageId) => {
+  const navigate = useCallback((id) => {
     if (window.location.hash !== `#/${id}`) window.location.hash = `/${id}`
     setPage(id)
     setMenuOpen(false)

@@ -5,133 +5,9 @@
  * No database is connected yet. Replace these arrays with API calls later.
  */
 
-export type OrderStatus = 'Pending' | 'In Production' | 'Quality Check' | 'Ready' | 'Dispatched' | 'Cancelled'
-export type Priority = 'High' | 'Medium' | 'Low'
-
-export interface Order {
-  id: string
-  customer: string
-  product: string
-  fabric: string
-  quantity: number
-  unit: 'm' | 'pcs'
-  orderDate: string
-  dueDate: string
-  status: OrderStatus
-  priority: Priority
-  value: number
-}
-
-export interface Material {
-  id: string
-  name: string
-  category: 'Yarn' | 'Dye' | 'Chemical' | 'Fabric' | 'Accessory'
-  stock: number
-  unit: string
-  reorderLevel: number
-  supplier: string
-  unitCost: number
-  lastRestocked: string
-}
-
-export type MachineStatus = 'Running' | 'Idle' | 'Maintenance' | 'Breakdown'
-
-export interface Machine {
-  id: string
-  name: string
-  type: 'Loom' | 'Knitting' | 'Dyeing' | 'Stitching' | 'Finishing'
-  line: string
-  status: MachineStatus
-  efficiency: number
-  operator: string
-  currentJob: string
-  outputToday: number
-}
-
-export type Stage = 'Spinning' | 'Weaving' | 'Dyeing' | 'Finishing' | 'Stitching' | 'Packing'
-
-export interface Batch {
-  id: string
-  orderId: string
-  product: string
-  stage: Stage
-  progress: number
-  machine: string
-  target: number
-  produced: number
-  unit: 'm' | 'pcs'
-}
-
-export type InspectionResult = 'Pending' | 'Passed' | 'Failed' | 'Rework'
-
-export interface Inspection {
-  id: string
-  batchId: string
-  product: string
-  inspector: string
-  date: string
-  sampleSize: number
-  defects: number
-  defectType: string
-  result: InspectionResult
-}
-
-export interface FinishedGood {
-  sku: string
-  product: string
-  category: 'Shirting' | 'Suiting' | 'Home Textile' | 'Knitwear' | 'Denim'
-  colour: string
-  quantity: number
-  unit: 'm' | 'pcs'
-  warehouse: 'WH-A Coimbatore' | 'WH-B Tiruppur' | 'WH-C Erode'
-  bin: string
-  unitValue: number
-  reservedFor?: string
-}
-
-export type DispatchStatus = 'Scheduled' | 'Loading' | 'In Transit' | 'Delivered'
-
-export interface Dispatch {
-  id: string
-  orderId: string
-  customer: string
-  destination: string
-  carrier: string
-  vehicle: string
-  date: string
-  packages: number
-  status: DispatchStatus
-}
-
-export type AttendanceStatus = 'Present' | 'Absent' | 'Late' | 'On Leave'
-
-export interface Worker {
-  id: string
-  name: string
-  role: string
-  department: 'Weaving' | 'Dyeing' | 'Stitching' | 'Quality' | 'Warehouse' | 'Maintenance'
-  shift: 'Morning' | 'Evening' | 'Night'
-  status: AttendanceStatus
-  checkIn: string
-  hoursThisWeek: number
-  dailyWage: number
-}
-
-export type InvoiceStatus = 'Paid' | 'Unpaid' | 'Overdue'
-
-export interface Invoice {
-  id: string
-  customer: string
-  orderId: string
-  amount: number
-  issued: string
-  due: string
-  status: InvoiceStatus
-}
-
 export const DEMO_TODAY = '2026-10-10'
 
-export const orders: Order[] = [
+export const orders = [
   { id: 'ORD-1048', customer: 'Demo Apparel Co.', product: 'Oxford Shirting', fabric: 'Cotton 40s', quantity: 12000, unit: 'm', orderDate: '2026-09-22', dueDate: '2026-10-18', status: 'In Production', priority: 'High', value: 1680000 },
   { id: 'ORD-1047', customer: 'Sample Home Linens', product: 'Bedsheet Percale', fabric: 'Cotton 60s', quantity: 4500, unit: 'pcs', orderDate: '2026-09-20', dueDate: '2026-10-14', status: 'Quality Check', priority: 'High', value: 1125000 },
   { id: 'ORD-1046', customer: 'Test Denim Works', product: 'Stretch Denim 11oz', fabric: 'Cotton-Lycra', quantity: 8000, unit: 'm', orderDate: '2026-09-18', dueDate: '2026-10-25', status: 'In Production', priority: 'Medium', value: 1520000 },
@@ -146,7 +22,7 @@ export const orders: Order[] = [
   { id: 'ORD-1037', customer: 'Mock Export House', product: 'Organic Cotton Jersey', fabric: 'Organic 30s', quantity: 9000, unit: 'm', orderDate: '2026-08-20', dueDate: '2026-10-15', status: 'Ready', priority: 'Medium', value: 1350000 },
 ]
 
-export const materials: Material[] = [
+export const materials = [
   { id: 'RM-001', name: 'Cotton Yarn 40s Combed', category: 'Yarn', stock: 2850, unit: 'kg', reorderLevel: 1500, supplier: 'Demo Spinning Mills', unitCost: 310, lastRestocked: '2026-10-02' },
   { id: 'RM-002', name: 'Cotton Yarn 60s Compact', category: 'Yarn', stock: 640, unit: 'kg', reorderLevel: 1000, supplier: 'Demo Spinning Mills', unitCost: 420, lastRestocked: '2026-09-18' },
   { id: 'RM-003', name: 'Polyester Filament 150D', category: 'Yarn', stock: 1900, unit: 'kg', reorderLevel: 800, supplier: 'Sample Synthetics', unitCost: 145, lastRestocked: '2026-09-29' },
@@ -163,7 +39,7 @@ export const materials: Material[] = [
   { id: 'RM-014', name: 'Woven Labels', category: 'Accessory', stock: 6500, unit: 'pcs', reorderLevel: 10000, supplier: 'Demo Trims Co.', unitCost: 1.2, lastRestocked: '2026-09-02' },
 ]
 
-export const machines: Machine[] = [
+export const machines = [
   { id: 'LM-01', name: 'Air-Jet Loom 01', type: 'Loom', line: 'Weaving A', status: 'Running', efficiency: 92, operator: 'R. Kumar', currentJob: 'BT-2201', outputToday: 640 },
   { id: 'LM-02', name: 'Air-Jet Loom 02', type: 'Loom', line: 'Weaving A', status: 'Running', efficiency: 88, operator: 'S. Priya', currentJob: 'BT-2201', outputToday: 590 },
   { id: 'LM-03', name: 'Rapier Loom 03', type: 'Loom', line: 'Weaving A', status: 'Maintenance', efficiency: 0, operator: '—', currentJob: '—', outputToday: 120 },
@@ -178,7 +54,7 @@ export const machines: Machine[] = [
   { id: 'FN-01', name: 'Stenter Finisher 01', type: 'Finishing', line: 'Wet Processing', status: 'Running', efficiency: 84, operator: 'B. Mohan', currentJob: 'BT-2202', outputToday: 1350 },
 ]
 
-export const batches: Batch[] = [
+export const batches = [
   { id: 'BT-2201', orderId: 'ORD-1048', product: 'Oxford Shirting', stage: 'Weaving', progress: 62, machine: 'LM-01, LM-02', target: 12000, produced: 7440, unit: 'm' },
   { id: 'BT-2202', orderId: 'ORD-1037', product: 'Organic Cotton Jersey', stage: 'Finishing', progress: 94, machine: 'DY-01, FN-01', target: 9000, produced: 8460, unit: 'm' },
   { id: 'BT-2203', orderId: 'ORD-1046', product: 'Stretch Denim 11oz', stage: 'Weaving', progress: 38, machine: 'LM-04', target: 8000, produced: 3040, unit: 'm' },
@@ -187,7 +63,7 @@ export const batches: Batch[] = [
   { id: 'BT-2206', orderId: 'ORD-1047', product: 'Bedsheet Percale', stage: 'Packing', progress: 98, machine: 'ST-01', target: 4500, produced: 4410, unit: 'pcs' },
 ]
 
-export const inspections: Inspection[] = [
+export const inspections = [
   { id: 'QC-5121', batchId: 'BT-2206', product: 'Bedsheet Percale', inspector: 'L. Saranya', date: '2026-10-10', sampleSize: 200, defects: 0, defectType: '—', result: 'Pending' },
   { id: 'QC-5120', batchId: 'BT-2204', product: 'Twill Workwear', inspector: 'D. Karthik', date: '2026-10-10', sampleSize: 150, defects: 0, defectType: '—', result: 'Pending' },
   { id: 'QC-5119', batchId: 'BT-2202', product: 'Organic Cotton Jersey', inspector: 'L. Saranya', date: '2026-10-09', sampleSize: 250, defects: 0, defectType: '—', result: 'Pending' },
@@ -200,7 +76,7 @@ export const inspections: Inspection[] = [
   { id: 'QC-5112', batchId: 'BT-2193', product: 'Oxford Shirting', inspector: 'D. Karthik', date: '2026-10-04', sampleSize: 200, defects: 3, defectType: 'Float', result: 'Passed' },
 ]
 
-export const finishedGoods: FinishedGood[] = [
+export const finishedGoods = [
   { sku: 'FG-SH-OX-WHT', product: 'Oxford Shirting', category: 'Shirting', colour: 'White', quantity: 4200, unit: 'm', warehouse: 'WH-A Coimbatore', bin: 'A-03-2', unitValue: 140 },
   { sku: 'FG-SH-OX-BLU', product: 'Oxford Shirting', category: 'Shirting', colour: 'Sky Blue', quantity: 2600, unit: 'm', warehouse: 'WH-A Coimbatore', bin: 'A-03-4', unitValue: 140 },
   { sku: 'FG-KN-JR-ORG', product: 'Organic Cotton Jersey', category: 'Knitwear', colour: 'Natural', quantity: 8900, unit: 'm', warehouse: 'WH-B Tiruppur', bin: 'B-01-1', unitValue: 150, reservedFor: 'ORD-1037' },
@@ -213,7 +89,7 @@ export const finishedGoods: FinishedGood[] = [
   { sku: 'FG-SU-TW-KHK', product: 'Twill Workwear', category: 'Suiting', colour: 'Khaki', quantity: 420, unit: 'm', warehouse: 'WH-A Coimbatore', bin: 'A-06-4', unitValue: 160 },
 ]
 
-export const dispatches: Dispatch[] = [
+export const dispatches = [
   { id: 'DSP-781', orderId: 'ORD-1045', customer: 'Placeholder Fashions', destination: 'Mumbai, MH', carrier: 'Demo Logistics', vehicle: 'TN-38-AB-1234', date: '2026-10-11', packages: 48, status: 'Scheduled' },
   { id: 'DSP-780', orderId: 'ORD-1037', customer: 'Mock Export House', destination: 'Chennai Port, TN', carrier: 'Sample Freight', vehicle: 'TN-66-CX-5521', date: '2026-10-10', packages: 90, status: 'Loading' },
   { id: 'DSP-779', orderId: 'ORD-1044', customer: 'Example Uniforms Ltd', destination: 'Bengaluru, KA', carrier: 'Demo Logistics', vehicle: 'TN-37-BZ-9087', date: '2026-10-08', packages: 60, status: 'In Transit' },
@@ -222,7 +98,7 @@ export const dispatches: Dispatch[] = [
   { id: 'DSP-776', orderId: 'ORD-1035', customer: 'Sample Home Linens', destination: 'Delhi, DL', carrier: 'Test Transport Co.', vehicle: 'DL-1C-ZZ-3001', date: '2026-09-24', packages: 70, status: 'Delivered' },
 ]
 
-export const workers: Worker[] = [
+export const workers = [
   { id: 'EMP-101', name: 'R. Kumar', role: 'Loom Operator', department: 'Weaving', shift: 'Morning', status: 'Present', checkIn: '05:52', hoursThisWeek: 46, dailyWage: 780 },
   { id: 'EMP-102', name: 'S. Priya', role: 'Loom Operator', department: 'Weaving', shift: 'Morning', status: 'Present', checkIn: '05:58', hoursThisWeek: 44, dailyWage: 780 },
   { id: 'EMP-103', name: 'M. Arjun', role: 'Senior Weaver', department: 'Weaving', shift: 'Morning', status: 'Late', checkIn: '06:24', hoursThisWeek: 41, dailyWage: 920 },
@@ -241,7 +117,7 @@ export const workers: Worker[] = [
   { id: 'EMP-116', name: 'C. Rajesh', role: 'Fitter', department: 'Maintenance', shift: 'Morning', status: 'Present', checkIn: '05:57', hoursThisWeek: 49, dailyWage: 950 },
 ]
 
-export const invoices: Invoice[] = [
+export const invoices = [
   { id: 'INV-3309', customer: 'Example Uniforms Ltd', orderId: 'ORD-1044', amount: 1020000, issued: '2026-10-08', due: '2026-11-07', status: 'Unpaid' },
   { id: 'INV-3308', customer: 'Test Denim Works', orderId: 'ORD-1040', amount: 925000, issued: '2026-10-02', due: '2026-11-01', status: 'Paid' },
   { id: 'INV-3307', customer: 'Demo Apparel Co.', orderId: 'ORD-1036', amount: 760000, issued: '2026-09-28', due: '2026-10-28', status: 'Unpaid' },

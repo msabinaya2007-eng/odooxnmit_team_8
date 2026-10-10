@@ -1,19 +1,19 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { CalendarDays, ChevronRight, MapPin, Plus, Printer, Truck } from 'lucide-react'
 import { Badge, Card, DataTable, DemoTag, Field, Modal, PageHeader, SearchInput, Segmented, StatCard, Toolbar } from '../components/ui'
 import { useData } from '../store/DataContext'
-import { DEMO_TODAY, type Dispatch, type DispatchStatus } from '../data/demoData'
+import { DEMO_TODAY } from '../data/demoData'
 import { formatDate, matchesSearch } from '../utils/format'
 
-const FLOW: DispatchStatus[] = ['Scheduled', 'Loading', 'In Transit', 'Delivered']
+const FLOW = ['Scheduled', 'Loading', 'In Transit', 'Delivered']
 const CARRIERS = ['Demo Logistics', 'Sample Freight', 'Test Transport Co.']
 
 export function DispatchPage() {
   const { dispatches, setDispatches, orders, setOrders, notify } = useData()
   const [query, setQuery] = useState('')
-  const [status, setStatus] = useState<DispatchStatus | 'All'>('All')
+  const [status, setStatus] = useState('All')
   const [open, setOpen] = useState(false)
-  const [slip, setSlip] = useState<Dispatch | null>(null)
+  const [slip, setSlip] = useState(null)
 
   const readyOrders = orders.filter((o) => o.status === 'Ready' && !dispatches.some((d) => d.orderId === o.id))
   const [form, setForm] = useState({ orderId: '', destination: '', carrier: CARRIERS[0], vehicle: '', date: DEMO_TODAY, packages: '' })
@@ -23,7 +23,7 @@ export function DispatchPage() {
     [dispatches, status, query],
   )
 
-  const advance = (d: Dispatch) => {
+  const advance = (d) => {
     const next = FLOW[FLOW.indexOf(d.status) + 1]
     if (!next) return
     setDispatches((prev) => prev.map((x) => (x.id === d.id ? { ...x, status: next } : x)))
@@ -36,12 +36,12 @@ export function DispatchPage() {
     setOpen(true)
   }
 
-  const submit = (e: FormEvent) => {
+  const submit = (e) => {
     e.preventDefault()
     const order = orders.find((o) => o.id === form.orderId)
     if (!order) return
     const next = Math.max(...dispatches.map((d) => Number(d.id.split('-')[1]))) + 1
-    const d: Dispatch = {
+    const d = {
       id: `DSP-${next}`,
       orderId: order.id,
       customer: order.customer,
@@ -79,7 +79,7 @@ export function DispatchPage() {
         <Segmented
           value={status}
           onChange={setStatus}
-          options={[{ value: 'All' as const, label: 'All', count: dispatches.length }, ...FLOW.map((s) => ({ value: s, label: s, count: dispatches.filter((d) => d.status === s).length }))]}
+          options={[{ value: 'All', label: 'All', count: dispatches.length }, ...FLOW.map((s) => ({ value: s, label: s, count: dispatches.filter((d) => d.status === s).length }))]}
         />
         <DataTable
           rows={filtered}

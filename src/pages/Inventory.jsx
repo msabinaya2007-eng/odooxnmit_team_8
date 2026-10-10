@@ -1,23 +1,23 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Boxes, IndianRupee, PackagePlus, Plus, TriangleAlert } from 'lucide-react'
 import { Badge, Card, DataTable, DemoTag, Field, Modal, PageHeader, Progress, SearchInput, SelectFilter, StatCard, Toolbar } from '../components/ui'
 import { axisProps, chartColors, gridProps, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
-import { DEMO_TODAY, type Material } from '../data/demoData'
+import { DEMO_TODAY } from '../data/demoData'
 import { formatDate, formatINR, formatINRCompact, formatNumber, matchesSearch } from '../utils/format'
 
-const CATEGORIES: Material['category'][] = ['Yarn', 'Dye', 'Chemical', 'Fabric', 'Accessory']
+const CATEGORIES = ['Yarn', 'Dye', 'Chemical', 'Fabric', 'Accessory']
 
 export function Inventory() {
   const { materials, setMaterials, isLowStock, notify } = useData()
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState<Material['category'] | 'All'>('All')
+  const [category, setCategory] = useState('All')
   const [lowOnly, setLowOnly] = useState(false)
-  const [restock, setRestock] = useState<Material | null>(null)
+  const [restock, setRestock] = useState(null)
   const [restockQty, setRestockQty] = useState('')
   const [addOpen, setAddOpen] = useState(false)
-  const [newItem, setNewItem] = useState({ name: '', category: 'Yarn' as Material['category'], stock: '', unit: 'kg', reorderLevel: '', supplier: '', unitCost: '' })
+  const [newItem, setNewItem] = useState({ name: '', category: 'Yarn', stock: '', unit: 'kg', reorderLevel: '', supplier: '', unitCost: '' })
 
   const filtered = useMemo(
     () => materials.filter((m) =>
@@ -34,7 +34,7 @@ export function Inventory() {
     value: Math.round(materials.filter((m) => m.category === c).reduce((s, m) => s + m.stock * m.unitCost, 0)),
   }))
 
-  const doRestock = (e: FormEvent) => {
+  const doRestock = (e) => {
     e.preventDefault()
     if (!restock) return
     const qty = Number(restockQty)
@@ -44,10 +44,10 @@ export function Inventory() {
     setRestockQty('')
   }
 
-  const addMaterial = (e: FormEvent) => {
+  const addMaterial = (e) => {
     e.preventDefault()
     const next = Math.max(...materials.map((m) => Number(m.id.split('-')[1]))) + 1
-    const item: Material = {
+    const item = {
       id: `RM-${String(next).padStart(3, '0')}`,
       name: newItem.name.trim(),
       category: newItem.category,
@@ -106,7 +106,7 @@ export function Inventory() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={byCategory} layout="vertical" margin={{ top: 4, right: 12, left: 8, bottom: 4 }}>
                 <CartesianGrid {...gridProps} horizontal={false} vertical />
-                <XAxis type="number" {...axisProps} tickFormatter={(v: number) => formatINRCompact(v)} />
+                <XAxis type="number" {...axisProps} tickFormatter={(v) => formatINRCompact(v)} />
                 <YAxis type="category" dataKey="category" {...axisProps} width={72} />
                 <Tooltip {...tooltipStyle} formatter={(v) => formatINR(Number(v))} />
                 <Bar dataKey="value" name="Stock value" fill={chartColors.navy} radius={[0, 4, 4, 0]} maxBarSize={26} />
@@ -140,7 +140,7 @@ export function Inventory() {
         <form id="material-form" className="form-grid" onSubmit={addMaterial}>
           <Field label="Material name" full><input required value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} /></Field>
           <Field label="Category">
-            <select value={newItem.category} onChange={(e) => setNewItem({ ...newItem, category: e.target.value as Material['category'] })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select>
+            <select value={newItem.category} onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select>
           </Field>
           <Field label="Unit"><input value={newItem.unit} onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })} placeholder="kg, L, m, pcs" /></Field>
           <Field label="Opening stock"><input required type="number" min={0} value={newItem.stock} onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })} /></Field>
@@ -152,4 +152,3 @@ export function Inventory() {
     </>
   )
 }
-

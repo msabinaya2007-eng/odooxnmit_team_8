@@ -3,21 +3,20 @@ import { Bell, Menu, TriangleAlert, Wrench, ShieldCheck } from 'lucide-react'
 import { useData } from '../store/DataContext'
 import { DEMO_TODAY } from '../data/demoData'
 import { formatDate } from '../utils/format'
-import type { PageId } from '../navigation'
 
-export function Topbar({ title, onMenu, onNavigate }: { title: string; onMenu: () => void; onNavigate: (id: PageId) => void }) {
+export function Topbar({ title, onMenu, onNavigate }) {
   const { materials, machines, inspections, isLowStock, settings } = useData()
   const [open, setOpen] = useState(false)
 
   const alerts = [
     ...(settings.notifyLowStock
-      ? materials.filter(isLowStock).map((m) => ({ key: m.id, icon: TriangleAlert, text: `Low stock: ${m.name}`, page: 'inventory' as PageId }))
+      ? materials.filter(isLowStock).map((m) => ({ key: m.id, icon: TriangleAlert, text: `Low stock: ${m.name}`, page: 'inventory' }))
       : []),
     ...(settings.notifyBreakdown
-      ? machines.filter((m) => m.status === 'Breakdown').map((m) => ({ key: m.id, icon: Wrench, text: `Breakdown: ${m.name}`, page: 'production' as PageId }))
+      ? machines.filter((m) => m.status === 'Breakdown').map((m) => ({ key: m.id, icon: Wrench, text: `Breakdown: ${m.name}`, page: 'production' }))
       : []),
     ...(settings.notifyQcFail
-      ? inspections.filter((i) => i.result === 'Failed').map((i) => ({ key: i.id, icon: ShieldCheck, text: `QC failed: ${i.batchId} ${i.product}`, page: 'quality' as PageId }))
+      ? inspections.filter((i) => i.result === 'Failed').map((i) => ({ key: i.id, icon: ShieldCheck, text: `QC failed: ${i.batchId} ${i.product}`, page: 'quality' }))
       : []),
   ]
 

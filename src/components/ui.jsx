@@ -1,8 +1,8 @@
-import { useEffect, type ReactNode } from 'react'
-import { Search, X, type LucideIcon } from 'lucide-react'
+import { useEffect } from 'react'
+import { Search, X } from 'lucide-react'
 
 /* ---------- Page header ---------- */
-export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
+export function PageHeader({ title, subtitle, actions }) {
   return (
     <div className="page-header">
       <div>
@@ -15,7 +15,7 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
 }
 
 /* ---------- Card / panel ---------- */
-export function Card({ title, actions, children, className = '' }: { title?: string; actions?: ReactNode; children: ReactNode; className?: string }) {
+export function Card({ title, actions, children, className = '' }) {
   return (
     <section className={`card ${className}`}>
       {(title || actions) && (
@@ -30,16 +30,7 @@ export function Card({ title, actions, children, className = '' }: { title?: str
 }
 
 /* ---------- KPI stat card ---------- */
-type Tone = 'navy' | 'teal' | 'amber' | 'red' | 'green' | 'slate'
-
-export function StatCard({ label, value, hint, icon: Icon, tone = 'navy', onClick }: {
-  label: string
-  value: ReactNode
-  hint?: ReactNode
-  icon: LucideIcon
-  tone?: Tone
-  onClick?: () => void
-}) {
+export function StatCard({ label, value, hint, icon: Icon, tone = 'navy', onClick }) {
   const content = (
     <>
       <span className={`stat-icon tone-${tone}`}><Icon size={20} /></span>
@@ -56,7 +47,7 @@ export function StatCard({ label, value, hint, icon: Icon, tone = 'navy', onClic
 }
 
 /* ---------- Status badge ---------- */
-const badgeTone: Record<string, Tone> = {
+const badgeTone = {
   // orders
   Pending: 'slate', 'In Production': 'teal', 'Quality Check': 'amber', Ready: 'green', Dispatched: 'navy', Cancelled: 'red',
   // machines
@@ -73,12 +64,12 @@ const badgeTone: Record<string, Tone> = {
   High: 'red', Medium: 'amber', Low: 'slate', 'Low stock': 'red', OK: 'green', Reserved: 'navy', Available: 'teal',
 }
 
-export function Badge({ children, tone }: { children: string; tone?: Tone }) {
+export function Badge({ children, tone }) {
   return <span className={`badge tone-${tone ?? badgeTone[children] ?? 'slate'}`}>{children}</span>
 }
 
 /* ---------- Progress bar ---------- */
-export function Progress({ value, tone = 'teal' }: { value: number; tone?: Tone }) {
+export function Progress({ value, tone = 'teal' }) {
   const v = Math.max(0, Math.min(100, value))
   return (
     <div className="progress" role="progressbar" aria-valuenow={v} aria-valuemin={0} aria-valuemax={100}>
@@ -88,11 +79,11 @@ export function Progress({ value, tone = 'teal' }: { value: number; tone?: Tone 
 }
 
 /* ---------- Toolbar: search + filters ---------- */
-export function Toolbar({ children }: { children: ReactNode }) {
+export function Toolbar({ children }) {
   return <div className="toolbar">{children}</div>
 }
 
-export function SearchInput({ value, onChange, placeholder = 'Search…' }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+export function SearchInput({ value, onChange, placeholder = 'Search…' }) {
   return (
     <label className="search-input">
       <Search size={16} />
@@ -104,11 +95,11 @@ export function SearchInput({ value, onChange, placeholder = 'Search…' }: { va
   )
 }
 
-export function SelectFilter<T extends string>({ label, value, options, onChange }: { label: string; value: T | 'All'; options: readonly T[]; onChange: (v: T | 'All') => void }) {
+export function SelectFilter({ label, value, options, onChange }) {
   return (
     <label className="select-filter">
       <span>{label}</span>
-      <select value={value} onChange={(e) => onChange(e.target.value as T | 'All')}>
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
         <option value="All">All</option>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -117,7 +108,7 @@ export function SelectFilter<T extends string>({ label, value, options, onChange
 }
 
 /** Pill-style tabs used as quick filters */
-export function Segmented<T extends string>({ value, options, onChange }: { value: T; options: readonly { value: T; label: string; count?: number }[]; onChange: (v: T) => void }) {
+export function Segmented({ value, options, onChange }) {
   return (
     <div className="segmented" role="tablist">
       {options.map((o) => (
@@ -130,15 +121,7 @@ export function Segmented<T extends string>({ value, options, onChange }: { valu
 }
 
 /* ---------- Data table ---------- */
-export interface Column<T> {
-  key: string
-  header: string
-  render: (row: T) => ReactNode
-  align?: 'left' | 'right' | 'center'
-  className?: string
-}
-
-export function DataTable<T>({ columns, rows, rowKey, empty = 'No records match your filters.' }: { columns: Column<T>[]; rows: T[]; rowKey: (row: T) => string; empty?: string }) {
+export function DataTable({ columns, rows, rowKey, empty = 'No records match your filters.' }) {
   return (
     <div className="table-wrap">
       <table className="data-table">
@@ -162,10 +145,10 @@ export function DataTable<T>({ columns, rows, rowKey, empty = 'No records match 
 }
 
 /* ---------- Modal ---------- */
-export function Modal({ open, title, onClose, children, footer }: { open: boolean; title: string; onClose: () => void; children: ReactNode; footer?: ReactNode }) {
+export function Modal({ open, title, onClose, children, footer }) {
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const onKey = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
@@ -186,7 +169,7 @@ export function Modal({ open, title, onClose, children, footer }: { open: boolea
 }
 
 /* ---------- Form field ---------- */
-export function Field({ label, children, full }: { label: string; children: ReactNode; full?: boolean }) {
+export function Field({ label, children, full }) {
   return (
     <label className={`field ${full ? 'full' : ''}`}>
       <span>{label}</span>
@@ -195,7 +178,7 @@ export function Field({ label, children, full }: { label: string; children: Reac
   )
 }
 
-export function Toggle({ checked, onChange, label, description }: { checked: boolean; onChange: (v: boolean) => void; label: string; description?: string }) {
+export function Toggle({ checked, onChange, label, description }) {
   return (
     <label className="toggle-row">
       <div>

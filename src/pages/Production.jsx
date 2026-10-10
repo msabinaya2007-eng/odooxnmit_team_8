@@ -4,15 +4,14 @@ import { Activity, Gauge, Pause, Play, Power, Wrench } from 'lucide-react'
 import { Badge, Card, DataTable, DemoTag, PageHeader, Progress, SearchInput, Segmented, StatCard, Toolbar } from '../components/ui'
 import { axisProps, chartColors, gridProps, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
-import type { Machine, MachineStatus, Stage } from '../data/demoData'
 import { formatNumber, matchesSearch } from '../utils/format'
 
-const STATUSES: MachineStatus[] = ['Running', 'Idle', 'Maintenance', 'Breakdown']
-const STAGES: Stage[] = ['Spinning', 'Weaving', 'Dyeing', 'Finishing', 'Stitching', 'Packing']
+const STATUSES = ['Running', 'Idle', 'Maintenance', 'Breakdown']
+const STAGES = ['Spinning', 'Weaving', 'Dyeing', 'Finishing', 'Stitching', 'Packing']
 
 export function Production() {
   const { machines, setMachines, batches, setBatches, notify } = useData()
-  const [statusFilter, setStatusFilter] = useState<MachineStatus | 'All'>('All')
+  const [statusFilter, setStatusFilter] = useState('All')
   const [query, setQuery] = useState('')
 
   const shown = useMemo(
@@ -25,12 +24,12 @@ export function Production() {
   const output = machines.reduce((s, m) => s + m.outputToday, 0)
   const down = machines.filter((m) => m.status === 'Breakdown' || m.status === 'Maintenance').length
 
-  const setStatus = (m: Machine, status: MachineStatus) => {
+  const setStatus = (m, status) => {
     setMachines((prev) => prev.map((x) => (x.id === m.id ? { ...x, status, efficiency: status === 'Running' ? Math.max(x.efficiency, 80) : 0 } : x)))
     notify(`${m.name} set to ${status}`)
   }
 
-  const advanceStage = (id: string) => {
+  const advanceStage = (id) => {
     setBatches((prev) => prev.map((b) => {
       if (b.id !== id) return b
       const idx = STAGES.indexOf(b.stage)
@@ -61,7 +60,7 @@ export function Production() {
           <Segmented
             value={statusFilter}
             onChange={setStatusFilter}
-            options={[{ value: 'All' as const, label: 'All', count: machines.length }, ...STATUSES.map((s) => ({ value: s, label: s, count: machines.filter((m) => m.status === s).length }))]}
+            options={[{ value: 'All', label: 'All', count: machines.length }, ...STATUSES.map((s) => ({ value: s, label: s, count: machines.filter((m) => m.status === s).length }))]}
           />
         </Toolbar>
         <div className="machine-grid">

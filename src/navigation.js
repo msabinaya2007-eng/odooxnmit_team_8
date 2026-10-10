@@ -1,17 +1,6 @@
-import { Boxes, ClipboardList, Factory, IndianRupee, LayoutDashboard, PackageCheck, Settings, ShieldCheck, Truck, Users, type LucideIcon } from 'lucide-react'
+import { Boxes, ClipboardList, Factory, IndianRupee, LayoutDashboard, PackageCheck, Settings, ShieldCheck, Truck, Users } from 'lucide-react'
 
-export type PageId =
-  | 'dashboard' | 'orders' | 'inventory' | 'production' | 'quality'
-  | 'finished-goods' | 'dispatch' | 'workers' | 'finance' | 'settings'
-
-export interface NavItem {
-  id: PageId
-  label: string
-  icon: LucideIcon
-  section: 'Overview' | 'Operations' | 'People & Money' | 'System'
-}
-
-export const navItems: NavItem[] = [
+export const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, section: 'Overview' },
   { id: 'orders', label: 'Orders', icon: ClipboardList, section: 'Operations' },
   { id: 'inventory', label: 'Raw Material Inventory', icon: Boxes, section: 'Operations' },
@@ -24,8 +13,4 @@ export const navItems: NavItem[] = [
   { id: 'settings', label: 'Settings', icon: Settings, section: 'System' },
 ]
 
-export const isPageId = (v: string): v is PageId => navItems.some((n) => n.id === v)
-
-export interface PageProps {
-  onNavigate: (id: PageId) => void
-}
+export const isPageId = (v) => navItems.some((n) => n.id === v)

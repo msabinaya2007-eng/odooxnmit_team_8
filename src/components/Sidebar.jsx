@@ -1,8 +1,8 @@
 import { Spool } from 'lucide-react'
-import { navItems, type NavItem, type PageId } from '../navigation'
+import { navItems } from '../navigation'
 import { useData } from '../store/DataContext'
 
-export function Sidebar({ active, open, onNavigate }: { active: PageId; open: boolean; onNavigate: (id: PageId) => void }) {
+export function Sidebar({ active, open, onNavigate }) {
   const { settings } = useData()
   const sections = [...new Set(navItems.map((n) => n.section))]
 
@@ -20,7 +20,7 @@ export function Sidebar({ active, open, onNavigate }: { active: PageId; open: bo
         {sections.map((section) => (
           <div key={section} className="nav-section">
             <div className="nav-section-label">{section}</div>
-            {navItems.filter((n) => n.section === section).map((item: NavItem) => (
+            {navItems.filter((n) => n.section === section).map((item) => (
               <a
                 key={item.id}
                 href={`#/${item.id}`}
