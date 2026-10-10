@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, X } from 'lucide-react'
 
 /* ---------- Page header ---------- */
@@ -30,20 +30,42 @@ export function Card({ title, actions, children, className = '' }) {
 }
 
 /* ---------- KPI stat card ---------- */
-export function StatCard({ label, value, hint, icon: Icon, tone = 'navy', onClick }) {
+function useCountUp(target) {
+  const reduceMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const animate = typeof target === 'number' && !reduceMotion
+  const [display, setDisplay] = useState(animate ? 0 : target)
+  useEffect(() => {
+    if (!animate) return undefined
+    let raf = 0
+    const start = performance.now()
+    const dur = 800
+    const tick = (t) => {
+      const p = Math.min(1, (t - start) / dur)
+      setDisplay(Math.round(target * (1 - Math.pow(1 - p, 3))))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [animate, target])
+  return animate ? display : target
+}
+
+export function StatCard({ label, value, hint, icon: Icon, tone = 'navy', onClick, className = '' }) {
+  const shown = useCountUp(value)
   const content = (
     <>
-      <span className={`stat-icon tone-${tone}`}><Icon size={20} /></span>
+      <span className={`stat-icon tone-${tone}`}><Icon size={22} /></span>
       <div className="stat-body">
         <span className="stat-label">{label}</span>
-        <span className="stat-value">{value}</span>
+        <span className="stat-value">{shown}</span>
         {hint && <span className="stat-hint">{hint}</span>}
       </div>
     </>
   )
+  const cls = `stat-card${onClick ? ' clickable' : ''}${className ? ` ${className}` : ''}`
   return onClick
-    ? <button type="button" className="stat-card clickable" onClick={onClick}>{content}</button>
-    : <div className="stat-card">{content}</div>
+    ? <button type="button" className={cls} onClick={onClick}>{content}</button>
+    : <div className={cls}>{content}</div>
 }
 
 /* ---------- Status badge ---------- */
@@ -66,6 +88,34 @@ const badgeTone = {
 
 export function Badge({ children, tone }) {
   return <span className={`badge tone-${tone ?? badgeTone[children] ?? 'slate'}`}>{children}</span>
+}
+
+/* ---------- Order journey: thread with a knot per stage ---------- */
+const JOURNEY = ['Pending', 'In Production', 'Quality Check', 'Ready', 'Dispatched']
+
+export function OrderThread({ status }) {
+  if (status === 'Cancelled') {
+    return (
+      <span className="order-thread is-cancelled">
+        <span className="thread-track" aria-hidden="true">
+          {JOURNEY.map((s) => <span key={s} className="thread-knot" />)}
+        </span>
+        <span><Badge>Cancelled</Badge></span>
+      </span>
+    )
+  }
+  const idx = Math.max(0, JOURNEY.indexOf(status))
+  return (
+    <span className="order-thread">
+      <span className="thread-track" role="img" aria-label={`Stage ${idx + 1} of ${JOURNEY.length}: ${status}`}>
+        <span className="thread-fill" style={{ width: `calc((100% - 26px) * ${idx / (JOURNEY.length - 1)})` }} aria-hidden="true" />
+        {JOURNEY.map((s, i) => (
+          <span key={s} title={s} className={`thread-knot${i < idx ? ' done' : ''}${i === idx ? ' now' : ''}`} />
+        ))}
+      </span>
+      <span><Badge>{status}</Badge></span>
+    </span>
+  )
 }
 
 /* ---------- Progress bar ---------- */

@@ -1,27 +1,34 @@
-/** Shared Recharts styling so every chart reads as one system */
+/** Shared Recharts styling — LoomFlow ink & saffron system */
 export const chartColors = {
-  navy: '#1e3a5f',
-  teal: '#0d9488',
-  tealLight: '#5eead4',
-  slate: '#94a3b8',
-  amber: '#d97706',
-  red: '#dc2626',
-  green: '#16a34a',
+  navy: '#171A3A',
+  teal: '#E8833A',
+  tealLight: '#FBE3CC',
+  slate: '#6B6F85',
+  amber: '#C98A12',
+  red: '#C8372D',
+  green: '#1F8A5B',
 }
 
-/** Ordered categorical palette (navy → teal family → neutrals) */
-export const categorical = ['#1e3a5f', '#0d9488', '#3b6ea5', '#5eb8ad', '#94a3b8', '#c7d2de']
+/** Ordered categorical palette (ink → saffron → tints → neutrals) */
+export const categorical = ['#171A3A', '#E8833A', '#3D4390', '#F0A35E', '#B9B3C7', '#D3CDB8']
 
 export const axisProps = {
-  stroke: '#94a3b8',
-  tick: { fill: '#64748b', fontSize: 12 },
+  stroke: '#E2DED2',
+  tick: { fill: '#4A4F6A', fontSize: 14, fontFamily: "'DM Sans', sans-serif" },
   tickLine: false,
   axisLine: false,
 }
 
-export const gridProps = { stroke: '#e2e8f0', strokeDasharray: '3 3', vertical: false }
+export const gridProps = { stroke: '#E2DED2', strokeDasharray: '3 3', vertical: false }
 
 export const tooltipStyle = {
-  contentStyle: { borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15,35,64,.08)', fontSize: 13 },
-  labelStyle: { color: '#0f2340', fontWeight: 600 },
+  contentStyle: {
+    borderRadius: 16,
+    border: '1px solid #E2DED2',
+    background: '#FFFEFA',
+    boxShadow: '0 1px 2px rgba(23,26,58,.06), 0 12px 32px rgba(23,26,58,.08)',
+    fontSize: 15,
+    fontFamily: "'DM Sans', sans-serif",
+  },
+  labelStyle: { color: '#171A3A', fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" },
 }

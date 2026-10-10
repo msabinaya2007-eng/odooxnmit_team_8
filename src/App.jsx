@@ -3,6 +3,7 @@ import { CircleCheck } from 'lucide-react'
 import { Sidebar } from './components/Sidebar'
 import { Topbar } from './components/Topbar'
 import { DataProvider, useData } from './store/DataContext'
+import { AuthProvider } from './store/AuthContext'
 import { isPageId, navItems } from './navigation'
 import { Dashboard } from './pages/Dashboard'
 import { Orders } from './pages/Orders'
@@ -10,10 +11,12 @@ import { Inventory } from './pages/Inventory'
 import { Production } from './pages/Production'
 import { QualityControl } from './pages/QualityControl'
 import { FinishedGoods } from './pages/FinishedGoods'
-import { DispatchPage } from './pages/Dispatch'
 import { Workers } from './pages/Workers'
 import { Finance } from './pages/Finance'
 import { SettingsPage } from './pages/Settings'
+import { Landing } from './pages/Landing'
+import { Login } from './pages/Login'
+import { Signup } from './pages/Signup'
 import './App.css'
 
 const pages = {
@@ -23,7 +26,6 @@ const pages = {
   production: Production,
   quality: QualityControl,
   'finished-goods': FinishedGoods,
-  dispatch: DispatchPage,
   workers: Workers,
   finance: Finance,
   settings: SettingsPage,
@@ -31,26 +33,30 @@ const pages = {
 
 function readHash() {
   const id = window.location.hash.replace(/^#\/?/, '')
+  if (id === '' || id === 'login' || id === 'signup') return id
+  if (id === 'dispatch') return 'orders'
   return isPageId(id) ? id : 'dashboard'
 }
 
-function Shell() {
-  const [page, setPage] = useState(readHash)
+function normalizeHash() {
+  if (window.location.hash.replace(/^#\/?/, '') === 'dispatch') window.location.hash = '#/orders'
+}
+
+function Shell({ page, onHash }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const { toasts } = useData()
 
   useEffect(() => {
-    const onHash = () => setPage(readHash())
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
-  }, [])
+  }, [onHash])
 
   const navigate = useCallback((id) => {
     if (window.location.hash !== `#/${id}`) window.location.hash = `/${id}`
-    setPage(id)
+    onHash()
     setMenuOpen(false)
     document.querySelector('.main')?.scrollTo({ top: 0 })
-  }, [])
+  }, [onHash])
 
   const Page = pages[page]
   const title = navItems.find((n) => n.id === page)?.label ?? ''
@@ -78,10 +84,38 @@ function Shell() {
   )
 }
 
+function Root() {
+  const [route, setRoute] = useState(readHash)
+  const onHash = useCallback(() => {
+    normalizeHash()
+    setRoute(readHash())
+    window.scrollTo({ top: 0 })
+  }, [])
+
+  useEffect(() => {
+    normalizeHash()
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [onHash])
+
+  useEffect(() => {
+    if (route === 'login') document.title = 'Log in · LoomFlow'
+    else if (route === 'signup') document.title = 'Sign up · LoomFlow'
+    else if (route === '') document.title = 'LoomFlow — Textile mill management'
+  }, [route])
+
+  if (route === '') return <Landing />
+  if (route === 'login') return <Login />
+  if (route === 'signup') return <Signup />
+  return <Shell page={route} onHash={onHash} />
+}
+
 export default function App() {
   return (
     <DataProvider>
-      <Shell />
+      <AuthProvider>
+        <Root />
+      </AuthProvider>
     </DataProvider>
   )
 }

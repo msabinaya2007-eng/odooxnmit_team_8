@@ -1,23 +1,34 @@
 import { useMemo, useState } from 'react'
-import { Download, Pencil, Plus } from 'lucide-react'
-import { Badge, Card, DataTable, DemoTag, Field, Modal, PageHeader, SearchInput, Segmented, SelectFilter, Toolbar } from '../components/ui'
+import { ChevronRight, Download, PackageCheck, Pencil, Plus, Printer, Truck } from 'lucide-react'
+import { Badge, Card, DataTable, DemoTag, Field, Modal, OrderThread, PageHeader, SearchInput, Segmented, SelectFilter, StatCard, Toolbar } from '../components/ui'
 import { useData } from '../store/DataContext'
 import { DEMO_TODAY } from '../data/demoData'
 import { downloadCSV, formatDate, formatINR, formatNumber, matchesSearch } from '../utils/format'
 
 const STATUSES = ['Pending', 'In Production', 'Quality Check', 'Ready', 'Dispatched', 'Cancelled']
+const PICKABLE_STATUSES = STATUSES.filter((s) => s !== 'Dispatched')
 const PRIORITIES = ['High', 'Medium', 'Low']
+const FLOW = ['Scheduled', 'Loading', 'In Transit', 'Delivered']
+const CARRIERS = ['Demo Logistics', 'Sample Freight', 'Test Transport Co.']
 
 const emptyForm = { customer: '', product: '', fabric: '', quantity: '', unit: 'm', dueDate: '', priority: 'Medium', value: '' }
+const emptyDispatchForm = { destination: '', carrier: CARRIERS[0], vehicle: '', date: DEMO_TODAY, packages: '' }
 
 export function Orders() {
-  const { orders, setOrders, notify } = useData()
+  const { orders, setOrders, dispatches, setDispatches, notify } = useData()
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('All')
   const [priority, setPriority] = useState('All')
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [editing, setEditing] = useState(null)
+  const [dispatchOrder, setDispatchOrder] = useState(null)
+  const [dispatchForm, setDispatchForm] = useState(emptyDispatchForm)
+  const [slip, setSlip] = useState(null)
+
+  const shipmentOf = (orderId) => dispatches.find((d) => d.orderId === orderId)
+  const readyToShip = orders.filter((o) => o.status === 'Ready' && !shipmentOf(o.id))
+  const inTransit = dispatches.filter((d) => d.status === 'In Transit')
 
   const filtered = useMemo(
     () => orders.filter((o) =>
@@ -57,7 +68,42 @@ export function Orders() {
     notify(`${id} status changed to ${next}`)
   }
 
+  const advance = (d) => {
+    const next = FLOW[FLOW.indexOf(d.status) + 1]
+    if (!next) return
+    setDispatches((prev) => prev.map((x) => (x.id === d.id ? { ...x, status: next } : x)))
+    if (next === 'In Transit') setOrders((prev) => prev.map((o) => (o.id === d.orderId ? { ...o, status: 'Dispatched' } : o)))
+    notify(`${d.id} → ${next}`)
+  }
+
+  const openDispatch = (order) => {
+    setDispatchForm({ ...emptyDispatchForm })
+    setDispatchOrder(order)
+  }
+
+  const submitDispatch = (e) => {
+    e.preventDefault()
+    const order = dispatchOrder
+    if (!order || shipmentOf(order.id)) return
+    const next = Math.max(...dispatches.map((d) => Number(d.id.split('-')[1]))) + 1
+    const d = {
+      id: `DSP-${next}`,
+      orderId: order.id,
+      customer: order.customer,
+      destination: dispatchForm.destination.trim(),
+      carrier: dispatchForm.carrier,
+      vehicle: dispatchForm.vehicle.trim().toUpperCase(),
+      date: dispatchForm.date,
+      packages: Number(dispatchForm.packages),
+      status: 'Scheduled',
+    }
+    setDispatches((prev) => [d, ...prev])
+    notify(`Dispatch ${d.id} scheduled for ${order.id}`)
+    setDispatchOrder(null)
+  }
+
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
+  const setD = (k, v) => setDispatchForm((f) => ({ ...f, [k]: v }))
 
   return (
     <>
@@ -72,6 +118,11 @@ export function Orders() {
           </>
         }
       />
+
+      <div className="stat-grid">
+        <StatCard icon={PackageCheck} label="Ready to ship" value={readyToShip.length} hint={readyToShip.map((o) => o.id).join(', ') || 'No unshipped Ready orders'} tone="green" onClick={() => setStatus('Ready')} />
+        <StatCard icon={Truck} label="In transit" value={inTransit.length} hint="Shipments on the road" tone="teal" onClick={() => setStatus('Dispatched')} />
+      </div>
 
       <Card>
         <Toolbar>
@@ -97,8 +148,32 @@ export function Orders() {
             { key: 'due', header: 'Due', render: (o) => <span className={o.dueDate < DEMO_TODAY && !['Dispatched', 'Cancelled'].includes(o.status) ? 'neg' : ''}>{formatDate(o.dueDate)}</span> },
             { key: 'priority', header: 'Priority', render: (o) => <Badge>{o.priority}</Badge> },
             { key: 'value', header: 'Value', align: 'right', render: (o) => formatINR(o.value) },
-            { key: 'status', header: 'Status', render: (o) => <Badge>{o.status}</Badge> },
-            { key: 'act', header: '', align: 'right', render: (o) => <button type="button" className="icon-btn" onClick={() => setEditing(o)} aria-label={`Update ${o.id}`}><Pencil size={16} /></button> },
+            { key: 'status', header: 'Stage', render: (o) => <OrderThread status={o.status} /> },
+            {
+              key: 'ship',
+              header: 'Shipment',
+              render: (o) => {
+                const d = shipmentOf(o.id)
+                if (!d) return <span className="muted">—</span>
+                return <><div><strong>{d.id}</strong></div><div className="muted small">{d.carrier} · {d.vehicle}</div><Badge>{d.status}</Badge></>
+              },
+            },
+            {
+              key: 'act',
+              header: '',
+              align: 'right',
+              render: (o) => {
+                const d = shipmentOf(o.id)
+                return (
+                  <div className="row-actions">
+                    {d && <button type="button" className="icon-btn" onClick={() => setSlip(d)} aria-label={`Packing slip ${d.id}`}><Printer size={16} /></button>}
+                    {d && d.status !== 'Delivered' && <button type="button" className="btn small secondary" onClick={() => advance(d)}>{FLOW[FLOW.indexOf(d.status) + 1]} <ChevronRight size={14} /></button>}
+                    {!d && o.status === 'Ready' && <button type="button" className="btn small primary" onClick={() => openDispatch(o)}>Schedule dispatch</button>}
+                    <button type="button" className="icon-btn" onClick={() => setEditing(o)} aria-label={`Update ${o.id}`}><Pencil size={16} /></button>
+                  </div>
+                )
+              },
+            },
           ]}
         />
       </Card>
@@ -130,11 +205,50 @@ export function Orders() {
           <>
             <p className="muted">{editing.customer} · {editing.product}</p>
             <div className="status-picker">
-              {STATUSES.map((s) => (
+              {PICKABLE_STATUSES.map((s) => (
                 <button key={s} type="button" className={`btn ${editing.status === s ? 'primary' : 'secondary'}`} onClick={() => updateStatus(editing.id, s)}>{s}</button>
               ))}
             </div>
+            <p className="muted small">An order becomes Dispatched only through its shipment.</p>
           </>
+        )}
+      </Modal>
+
+      <Modal
+        open={dispatchOrder !== null}
+        title={`Schedule dispatch — ${dispatchOrder?.id ?? ''}`}
+        onClose={() => setDispatchOrder(null)}
+        footer={<><button type="button" className="btn secondary" onClick={() => setDispatchOrder(null)}>Cancel</button><button type="submit" form="dispatch-form" className="btn primary">Schedule</button></>}
+      >
+        {dispatchOrder && (
+          <form id="dispatch-form" className="form-grid" onSubmit={submitDispatch}>
+            <Field label="Order (Ready)" full><input disabled value={`${dispatchOrder.id} · ${dispatchOrder.customer} · ${dispatchOrder.product}`} /></Field>
+            <Field label="Destination"><input required value={dispatchForm.destination} onChange={(e) => setD('destination', e.target.value)} placeholder="City, State" /></Field>
+            <Field label="Carrier">
+              <select value={dispatchForm.carrier} onChange={(e) => setD('carrier', e.target.value)}>{CARRIERS.map((c) => <option key={c}>{c}</option>)}</select>
+            </Field>
+            <Field label="Vehicle number"><input required value={dispatchForm.vehicle} onChange={(e) => setD('vehicle', e.target.value)} placeholder="TN-00-XX-0000" /></Field>
+            <Field label="Dispatch date"><input required type="date" value={dispatchForm.date} onChange={(e) => setD('date', e.target.value)} /></Field>
+            <Field label="Packages / bales"><input required type="number" min={1} value={dispatchForm.packages} onChange={(e) => setD('packages', e.target.value)} /></Field>
+          </form>
+        )}
+      </Modal>
+
+      <Modal open={slip !== null} title={`Packing slip — ${slip?.id ?? ''}`} onClose={() => setSlip(null)}>
+        {slip && (
+          <div className="slip">
+            <p className="demo-tag">Demo document — not a real shipment</p>
+            <dl className="slip-grid">
+              <dt>Order</dt><dd>{slip.orderId}</dd>
+              <dt>Customer</dt><dd>{slip.customer}</dd>
+              <dt>Ship to</dt><dd>{slip.destination}</dd>
+              <dt>Carrier</dt><dd>{slip.carrier}</dd>
+              <dt>Vehicle</dt><dd>{slip.vehicle}</dd>
+              <dt>Date</dt><dd>{formatDate(slip.date)}</dd>
+              <dt>Packages</dt><dd>{slip.packages}</dd>
+              <dt>Status</dt><dd><Badge>{slip.status}</Badge></dd>
+            </dl>
+          </div>
         )}
       </Modal>
     </>
