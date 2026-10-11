@@ -1,17 +1,18 @@
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Activity, ChevronRight, ClipboardList, Factory, IndianRupee, ShieldCheck, TrendingUp, TriangleAlert } from 'lucide-react'
+import { Activity, ChevronRight, ClipboardList, IndianRupee, ShieldCheck, TrendingUp, TriangleAlert } from 'lucide-react'
 import { Card, DemoTag, PageHeader, Progress, StatCard } from '../components/ui'
 import { axisProps, chartColors, gridProps, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
+import { useAuth } from '../store/AuthContext'
 import { monthlyFinance, weeklyProduction } from '../data/demoData'
 import { formatINRCompact, formatNumber } from '../utils/format'
 
 export function Dashboard({ onNavigate }) {
   const { orders, machines, materials, inspections, isLowStock, settings } = useData()
+  const { user } = useAuth()
+  const showMoney = user?.role !== 'Staff'
 
   const activeOrders = orders.filter((o) => ['Pending', 'In Production', 'Quality Check', 'Ready'].includes(o.status))
-  const todayProduction = weeklyProduction[weeklyProduction.length - 1].actual
-  const todayPct = Math.round((todayProduction / settings.dailyTarget) * 100)
   const lowStock = materials.filter(isLowStock)
   const pendingQc = inspections.filter((i) => i.result === 'Pending')
   const month = monthlyFinance[monthlyFinance.length - 2] // last full month
@@ -31,11 +32,10 @@ export function Dashboard({ onNavigate }) {
       />
 
       <div className="bento">
-        <StatCard icon={TrendingUp} label={`Net profit (${month.month})`} value={formatINRCompact(month.profit)} hint={<span className="pos">{margin}% margin</span>} tone="teal" onClick={() => onNavigate('finance')} className="tile-dark span-7" />
-        <StatCard icon={IndianRupee} label={`Revenue (${month.month})`} value={formatINRCompact(month.revenue)} hint={`Expenses ${formatINRCompact(month.expenses)}`} tone="navy" onClick={() => onNavigate('finance')} className="tile-saffron span-5" />
-        <StatCard icon={ClipboardList} label="Active orders" value={activeOrders.length} hint={`${activeOrders.filter((o) => o.priority === 'High').length} high priority`} tone="navy" onClick={() => onNavigate('orders')} className="tile-indigo span-4" />
-        <StatCard icon={Factory} label="Today's production" value={`${formatNumber(todayProduction)} m`} hint={<span className={todayPct >= 100 ? 'pos' : 'neg'}>{todayPct}% of {formatNumber(settings.dailyTarget)} m target</span>} tone="teal" onClick={() => onNavigate('production')} className="tile-mint span-4" />
-        <StatCard icon={Activity} label="Machines running" value={`${running} / ${machines.length}`} hint={`Avg. efficiency ${avgEff}%`} tone="green" onClick={() => onNavigate('production')} className="span-4" />
+        {showMoney && <StatCard icon={TrendingUp} label={`Net profit (${month.month})`} value={formatINRCompact(month.profit)} hint={<span className="pos">{margin}% margin</span>} tone="teal" onClick={() => onNavigate('finance')} className="tile-dark span-7" />}
+        {showMoney && <StatCard icon={IndianRupee} label={`Revenue (${month.month})`} value={formatINRCompact(month.revenue)} hint={`Expenses ${formatINRCompact(month.expenses)}`} tone="navy" onClick={() => onNavigate('finance')} className="tile-saffron span-5" />}
+        <StatCard icon={ClipboardList} label="Active orders" value={activeOrders.length} hint={`${activeOrders.filter((o) => o.priority === 'High').length} high priority`} tone="navy" onClick={() => onNavigate('orders')} className="tile-indigo span-6" />
+        <StatCard icon={Activity} label="Machines running" value={`${running} / ${machines.length}`} hint={`Avg. efficiency ${avgEff}%`} tone="green" onClick={() => onNavigate('production')} className="span-6" />
         <StatCard icon={TriangleAlert} label="Low-stock alerts" value={lowStock.length} hint="Materials at or below reorder level" tone={lowStock.length ? 'red' : 'green'} onClick={() => onNavigate('inventory')} className="tile-rose span-6" />
         <StatCard icon={ShieldCheck} label="Pending inspections" value={pendingQc.length} hint="Batches awaiting QC" tone="amber" onClick={() => onNavigate('quality')} className="span-6" />
       </div>

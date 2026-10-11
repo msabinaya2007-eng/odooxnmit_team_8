@@ -1,17 +1,22 @@
 import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { CircleCheck, CircleX, ClipboardList, Plus, RotateCcw, ShieldCheck } from 'lucide-react'
+import { CircleCheck, CircleX, ClipboardList, Lock, Plus, RotateCcw, ShieldCheck } from 'lucide-react'
 import { Badge, Card, DataTable, DemoTag, Field, Modal, PageHeader, SearchInput, Segmented, StatCard, Toolbar } from '../components/ui'
 import { axisProps, chartColors, gridProps, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
+import { useAuth } from '../store/AuthContext'
+import { can } from '../store/permissions'
 import { DEMO_TODAY } from '../data/demoData'
 import { formatDate, matchesSearch } from '../utils/format'
 
 const RESULTS = ['Pending', 'Passed', 'Failed', 'Rework']
 const DEFECT_TYPES = ['—', 'Broken pick', 'Float', 'Slub', 'Shade variation', 'Stain', 'Holes / Snags', 'Print misregistration', 'Stitching defect']
+const LOCK_TIP = 'Only authorised roles can edit'
 
 export function QualityControl() {
   const { inspections, setInspections, batches, workers, notify } = useData()
+  const { user } = useAuth()
+  const canEdit = can(user, 'quality.edit')
   const [query, setQuery] = useState('')
   const [result, setResult] = useState('All')
   const [recording, setRecording] = useState(null)
@@ -42,6 +47,7 @@ export function QualityControl() {
 
   const saveRecord = (e) => {
     e.preventDefault()
+    if (!can(user, 'quality.edit')) { notify('Only authorised roles can edit'); return }
     if (!recording) return
     setInspections((prev) => prev.map((i) => (i.id === recording.id ? { ...i, defects: Number(form.defects), defectType: form.defectType, result: form.result, date: DEMO_TODAY } : i)))
     notify(`${recording.id} recorded as ${form.result}`)
@@ -50,6 +56,7 @@ export function QualityControl() {
 
   const createInspection = (e) => {
     e.preventDefault()
+    if (!can(user, 'quality.edit')) { notify('Only authorised roles can edit'); return }
     const batch = batches.find((b) => b.id === newForm.batchId)
     const next = Math.max(...inspections.map((i) => Number(i.id.split('-')[1]))) + 1
     const insp = {
@@ -73,7 +80,10 @@ export function QualityControl() {
       <PageHeader
         title="Quality Control"
         subtitle="Fabric and garment inspections (4-point system, demo)"
-        actions={<><DemoTag /><button type="button" className="btn primary" onClick={() => { setNewForm({ batchId: batches[0]?.id ?? '', inspector: inspectors[0] ?? '', sampleSize: '200' }); setNewOpen(true) }}><Plus size={16} /> Schedule inspection</button></>}
+        viewOnly={!canEdit}
+        actions={<><DemoTag />{canEdit
+          ? <button type="button" className="btn primary" onClick={() => { setNewForm({ batchId: batches[0]?.id ?? '', inspector: inspectors[0] ?? '', sampleSize: '200' }); setNewOpen(true) }}><Plus size={16} /> Schedule inspection</button>
+          : <button type="button" className="btn primary" disabled title={LOCK_TIP}><Lock size={16} /> Schedule inspection</button>}</>}
       />
 
       <div className="stat-grid">
@@ -105,7 +115,12 @@ export function QualityControl() {
               { key: 'def', header: 'Defects', align: 'right', render: (i) => (i.result === 'Pending' ? '—' : i.defects) },
               { key: 'type', header: 'Main defect', render: (i) => <span className="muted">{i.defectType}</span> },
               { key: 'res', header: 'Result', render: (i) => <Badge>{i.result}</Badge> },
-              { key: 'act', header: '', align: 'right', render: (i) => i.result === 'Pending' ? <button type="button" className="btn small primary" onClick={() => openRecord(i)}><CircleCheck size={14} /> Record</button> : null },
+              { key: 'act', header: '', align: 'right', render: (i) => {
+                if (i.result !== 'Pending') return null
+                return canEdit
+                  ? <button type="button" className="btn small primary" onClick={() => openRecord(i)}><CircleCheck size={14} /> Record</button>
+                  : <button type="button" className="btn small primary" disabled title={LOCK_TIP}><Lock size={14} /> Record</button>
+              } },
             ]}
           />
         </Card>

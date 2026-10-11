@@ -1,10 +1,14 @@
 import { Spool } from 'lucide-react'
 import { navItems } from '../navigation'
 import { useData } from '../store/DataContext'
+import { useAuth } from '../store/AuthContext'
+import { can } from '../store/permissions'
 
 export function Sidebar({ active, open, onNavigate }) {
   const { settings } = useData()
-  const sections = [...new Set(navItems.map((n) => n.section))]
+  const { user } = useAuth()
+  const visible = navItems.filter((n) => can(user, 'page.open', n.id))
+  const sections = [...new Set(visible.map((n) => n.section))]
 
   return (
     <aside className={`sidebar ${open ? 'open' : ''}`} aria-label="Main navigation">
@@ -20,7 +24,7 @@ export function Sidebar({ active, open, onNavigate }) {
         {sections.map((section) => (
           <div key={section} className="nav-section">
             <div className="nav-section-label">{section}</div>
-            {navItems.filter((n) => n.section === section).map((item) => (
+            {visible.filter((n) => n.section === section).map((item) => (
               <a
                 key={item.id}
                 href={`#/${item.id}`}

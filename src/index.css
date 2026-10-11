@@ -169,6 +169,7 @@ code { font-family: ui-monospace, Consolas, monospace; }
   margin-bottom: var(--header-gap);
 }
 .page-header h1 { font-size: var(--font-title); line-height: 1.1; letter-spacing: -0.02em; }
+.page-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .page-header p { margin: 6px 0 0; color: var(--grey-500); }
 .page-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 

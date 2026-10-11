@@ -1,16 +1,21 @@
 import { useMemo, useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, Legend } from 'recharts'
-import { Download, Layers, PackageCheck, Warehouse } from 'lucide-react'
+import { Download, Layers, Lock, PackageCheck, Warehouse } from 'lucide-react'
 import { Badge, Card, DataTable, DemoTag, PageHeader, SearchInput, SelectFilter, StatCard, Toolbar } from '../components/ui'
 import { categorical, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
+import { useAuth } from '../store/AuthContext'
+import { can } from '../store/permissions'
 import { downloadCSV, formatINR, formatINRCompact, formatNumber, matchesSearch } from '../utils/format'
 
 const CATEGORIES = ['Shirting', 'Suiting', 'Home Textile', 'Knitwear', 'Denim']
 const WAREHOUSES = ['WH-A Coimbatore', 'WH-B Tiruppur', 'WH-C Erode']
+const LOCK_TIP = 'Only authorised roles can edit'
 
 export function FinishedGoods() {
-  const { finishedGoods } = useData()
+  const { finishedGoods, notify } = useData()
+  const { user } = useAuth()
+  const canEdit = can(user, 'finishedgoods.edit')
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
   const [warehouse, setWarehouse] = useState('All')
@@ -30,12 +35,20 @@ export function FinishedGoods() {
     value: finishedGoods.filter((g) => g.category === c).reduce((s, g) => s + g.quantity * g.unitValue, 0),
   })).filter((d) => d.value > 0)
 
+  const exportGoods = () => {
+    if (!can(user, 'finishedgoods.edit')) { notify('Only authorised roles can edit'); return }
+    downloadCSV('loomflow-finished-goods-demo.csv', filtered.map((g) => ({ ...g })))
+  }
+
   return (
     <>
       <PageHeader
         title="Finished Goods"
         subtitle="Packed stock ready for sale or dispatch"
-        actions={<><DemoTag /><button type="button" className="btn secondary" onClick={() => downloadCSV('loomflow-finished-goods-demo.csv', filtered.map((g) => ({ ...g })))}><Download size={16} /> Export CSV</button></>}
+        viewOnly={!canEdit}
+        actions={<><DemoTag />{canEdit
+          ? <button type="button" className="btn secondary" onClick={exportGoods}><Download size={16} /> Export CSV</button>
+          : <button type="button" className="btn secondary" disabled title={LOCK_TIP}><Lock size={16} /> Export CSV</button>}</>}
       />
 
       <div className="stat-grid three">

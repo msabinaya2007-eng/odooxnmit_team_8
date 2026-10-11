@@ -5,6 +5,7 @@ import { Badge, Card, DataTable, DemoTag, Field, Modal, PageHeader, Progress, Se
 import { axisProps, chartColors, gridProps, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
 import { useAuth } from '../store/AuthContext'
+import { can } from '../store/permissions'
 import { formatDate, formatNumber, matchesSearch } from '../utils/format'
 
 const STATUSES = ['Running', 'Idle', 'Maintenance', 'Breakdown']
@@ -26,7 +27,7 @@ function formatSince(dt) {
 
 export function Production() {
   const { machines, setMachines, batches, setBatches, maintenanceTickets, setMaintenanceTickets, workers, notify } = useData()
-  const { user, canOperate, canReportIssue, canManageMaintenance } = useAuth()
+  const { user } = useAuth()
   const [statusFilter, setStatusFilter] = useState('All')
   const [query, setQuery] = useState('')
   const [panelFor, setPanelFor] = useState(null)
@@ -53,7 +54,7 @@ export function Production() {
   const down = machines.filter((m) => m.status === 'Breakdown' || m.status === 'Maintenance').length
 
   const requestStatus = (m, status) => {
-    if (!canOperate(m)) {
+    if (!can(user, 'production.operate', m)) {
       notify("Only this machine's operator or an admin can start or pause")
       return
     }
@@ -81,7 +82,7 @@ export function Production() {
     e.preventDefault()
     const m = panelMachine
     if (!m) return
-    if (!canReportIssue(m)) {
+    if (!can(user, 'production.report', m)) {
       notify("Only this machine's operator or an admin can report an issue")
       return
     }
@@ -133,7 +134,7 @@ export function Production() {
     const m = panelMachine
     const t = panelTicket
     if (!m || !t) return
-    if (!canManageMaintenance) {
+    if (!can(user, 'production.maintain')) {
       notify('Only an admin can assign a mechanic')
       return
     }
@@ -158,7 +159,7 @@ export function Production() {
     const m = panelMachine
     const t = panelTicket
     if (!m || !t) return
-    if (!canManageMaintenance) {
+    if (!can(user, 'production.maintain')) {
       notify('Only an admin can resolve a ticket')
       return
     }
@@ -172,7 +173,10 @@ export function Production() {
   }
 
   const advanceStage = (id) => {
-    setBatches((prev) => prev.map((b) => {
+    if (!can(user, 'production.advance')) {
+      notify('Only authorised roles can edit')
+      return
+    }    setBatches((prev) => prev.map((b) => {
       if (b.id !== id) return b
       const idx = STAGES.indexOf(b.stage)
       return idx < STAGES.length - 1 ? { ...b, stage: STAGES[idx + 1] } : b
@@ -213,7 +217,7 @@ export function Production() {
           {shown.length === 0 && <p className="muted">No machines match.</p>}
           {shown.map((m) => {
             const open = openTicketFor(m.id)
-            const allowed = canOperate(m)
+            const allowed = can(user, 'production.operate', m)
             const startBlocked = !allowed || open
             const startTitle = !allowed
               ? "Only this machine's operator or an admin can start or pause"
@@ -295,7 +299,9 @@ export function Production() {
               { key: 'machine', header: 'Machines', render: (b) => <span className="muted">{b.machine}</span> },
               { key: 'progress', header: 'Progress', render: (b) => <div className="level-cell"><Progress value={b.progress} /><span className="small">{b.progress}%</span></div> },
               { key: 'qty', header: 'Produced', align: 'right', render: (b) => `${formatNumber(b.produced)} / ${formatNumber(b.target)} ${b.unit}` },
-              { key: 'act', header: '', align: 'right', render: (b) => <button type="button" className="btn ghost small" disabled={b.stage === 'Packing'} onClick={() => advanceStage(b.id)}>Next stage</button> },
+              { key: 'act', header: '', align: 'right', render: (b) => (can(user, 'production.advance')
+                ? <button type="button" className="btn ghost small" disabled={b.stage === 'Packing'} onClick={() => advanceStage(b.id)}>Next stage</button>
+                : <button type="button" className="btn ghost small" disabled title="Only authorised roles can edit"><Lock size={14} /> Next stage</button>) },
             ]}
           />
         </Card>
@@ -322,8 +328,9 @@ export function Production() {
       >
         {panelMachine && (() => {
           const t = panelTicket
-          const canReport = canReportIssue(panelMachine)
-          const readOnlyAll = !canReport && !canManageMaintenance
+          const canReport = panelMachine ? can(user, 'production.report', panelMachine) : false
+          const canManage = can(user, 'production.maintain')
+          const readOnlyAll = !canReport && !canManage
           return (
             <>
               {readOnlyAll && <p><Badge tone="slate">View only</Badge></p>}
@@ -364,7 +371,7 @@ export function Production() {
               <h3>B. Assign mechanic</h3>
               {!t ? (
                 <p className="muted">No open ticket for this machine yet.</p>
-              ) : canManageMaintenance ? (
+              ) : canManage ? (
                 <form onSubmit={assignMechanic}>
                   <div className="form-grid">
                     <Field label="Mechanic">
@@ -386,7 +393,9 @@ export function Production() {
                   </div>
                   <div className="status-picker">
                     <button type="submit" className="btn primary">Assign mechanic</button>
-                    {t.status === 'Assigned' && <button type="button" className="btn secondary" onClick={resolveTicket}>Mark resolved</button>}
+                    {t.status === 'Assigned' && (canManage
+                      ? <button type="button" className="btn secondary" onClick={resolveTicket}>Mark resolved</button>
+                      : <button type="button" className="btn secondary" disabled title="Only authorised roles can edit"><Lock size={14} /> Mark resolved</button>)}
                   </div>
                 </form>
               ) : (

@@ -1,16 +1,21 @@
 import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Boxes, IndianRupee, PackagePlus, Plus, TriangleAlert } from 'lucide-react'
+import { Boxes, IndianRupee, Lock, PackagePlus, Plus, TriangleAlert } from 'lucide-react'
 import { Badge, Card, DataTable, DemoTag, Field, Modal, PageHeader, Progress, SearchInput, SelectFilter, StatCard, Toolbar } from '../components/ui'
 import { axisProps, chartColors, gridProps, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
+import { useAuth } from '../store/AuthContext'
+import { can } from '../store/permissions'
 import { DEMO_TODAY } from '../data/demoData'
 import { formatDate, formatINR, formatINRCompact, formatNumber, matchesSearch } from '../utils/format'
 
 const CATEGORIES = ['Yarn', 'Dye', 'Chemical', 'Fabric', 'Accessory']
+const LOCK_TIP = 'Only authorised roles can edit'
 
 export function Inventory() {
   const { materials, setMaterials, isLowStock, notify } = useData()
+  const { user } = useAuth()
+  const canEdit = can(user, 'inventory.edit')
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
   const [lowOnly, setLowOnly] = useState(false)
@@ -36,6 +41,7 @@ export function Inventory() {
 
   const doRestock = (e) => {
     e.preventDefault()
+    if (!can(user, 'inventory.edit')) { notify('Only authorised roles can edit'); return }
     if (!restock) return
     const qty = Number(restockQty)
     setMaterials((prev) => prev.map((m) => (m.id === restock.id ? { ...m, stock: m.stock + qty, lastRestocked: DEMO_TODAY } : m)))
@@ -46,6 +52,7 @@ export function Inventory() {
 
   const addMaterial = (e) => {
     e.preventDefault()
+    if (!can(user, 'inventory.edit')) { notify('Only authorised roles can edit'); return }
     const next = Math.max(...materials.map((m) => Number(m.id.split('-')[1]))) + 1
     const item = {
       id: `RM-${String(next).padStart(3, '0')}`,
@@ -69,7 +76,10 @@ export function Inventory() {
       <PageHeader
         title="Raw Material Inventory"
         subtitle="Yarn, dyes, chemicals, greige fabric and trims"
-        actions={<><DemoTag /><button type="button" className="btn primary" onClick={() => setAddOpen(true)}><Plus size={16} /> Add material</button></>}
+        viewOnly={!canEdit}
+        actions={<><DemoTag />{canEdit
+          ? <button type="button" className="btn primary" onClick={() => setAddOpen(true)}><Plus size={16} /> Add material</button>
+          : <button type="button" className="btn primary" disabled title={LOCK_TIP}><Lock size={16} /> Add material</button>}</>}
       />
 
       <div className="stat-grid three">
@@ -96,7 +106,9 @@ export function Inventory() {
               { key: 'cost', header: 'Unit cost', align: 'right', render: (m) => formatINR(m.unitCost) },
               { key: 'last', header: 'Last restock', render: (m) => formatDate(m.lastRestocked) },
               { key: 'st', header: 'Status', render: (m) => <Badge>{isLowStock(m) ? 'Low stock' : 'OK'}</Badge> },
-              { key: 'act', header: '', align: 'right', render: (m) => <button type="button" className="btn ghost small" onClick={() => setRestock(m)}><PackagePlus size={14} /> Restock</button> },
+              { key: 'act', header: '', align: 'right', render: (m) => (canEdit
+                ? <button type="button" className="btn ghost small" onClick={() => setRestock(m)}><PackagePlus size={14} /> Restock</button>
+                : <button type="button" className="btn ghost small" disabled title={LOCK_TIP}><Lock size={14} /> Restock</button>) },
             ]}
           />
         </Card>

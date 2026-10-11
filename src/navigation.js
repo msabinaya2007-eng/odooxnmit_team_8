@@ -1,4 +1,4 @@
-import { Boxes, ClipboardList, Factory, IndianRupee, LayoutDashboard, PackageCheck, Settings, ShieldCheck, Users } from 'lucide-react'
+import { Boxes, ClipboardList, Factory, IndianRupee, LayoutDashboard, PackageCheck, Settings, ShieldCheck, Users, Wallet } from 'lucide-react'
 
 export const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, section: 'Overview' },
@@ -7,8 +7,9 @@ export const navItems = [
   { id: 'production', label: 'Production Floor', icon: Factory, section: 'Operations' },
   { id: 'quality', label: 'Quality Control', icon: ShieldCheck, section: 'Operations' },
   { id: 'finished-goods', label: 'Finished Goods', icon: PackageCheck, section: 'Operations' },
-  { id: 'workers', label: 'Workers & Attendance', icon: Users, section: 'People & Money' },
+  { id: 'workers', label: 'Attendance', icon: Users, section: 'People & Money' },
   { id: 'finance', label: 'Finance & Reports', icon: IndianRupee, section: 'People & Money' },
+  { id: 'salary', label: 'My Salary', icon: Wallet, section: 'People & Money' },
   { id: 'settings', label: 'Settings', icon: Settings, section: 'System' },
 ]
 

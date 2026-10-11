@@ -1,13 +1,20 @@
 import { useState } from 'react'
 import { ArrowRight } from 'lucide-react'
+import { useAuth } from '../store/AuthContext'
+import { useData } from '../store/DataContext'
 import './public.css'
 
 export function Signup() {
+  const { login } = useAuth()
+  const { setSettings } = useData()
   const [form, setForm] = useState({ mill: '', gstin: '', city: '', phone: '' })
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
   const submit = (e) => {
     e.preventDefault()
+    const millName = form.mill.trim()
+    if (millName) setSettings((prev) => ({ ...prev, companyName: millName }))
+    login({ name: 'Owner', role: 'Super Admin', workerId: null, department: 'Management' })
     window.location.hash = '#/dashboard'
   }
 

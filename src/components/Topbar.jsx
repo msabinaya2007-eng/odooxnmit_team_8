@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bell, Check, Menu, Search, TriangleAlert, Wrench, ShieldCheck } from 'lucide-react'
+import { Bell, Check, LogOut, Menu, Search, TriangleAlert, Wrench, ShieldCheck } from 'lucide-react'
 import { useData } from '../store/DataContext'
 import { useAuth } from '../store/AuthContext'
 import { Badge } from './ui'
@@ -22,7 +22,7 @@ function greeting() {
 
 export function Topbar({ title, onMenu, onNavigate }) {
   const { materials, machines, inspections, isLowStock, settings, notify } = useData()
-  const { user, users, switchUser } = useAuth()
+  const { user, users, switchUser, logout } = useAuth()
   const [open, setOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -95,6 +95,14 @@ export function Topbar({ title, onMenu, onNavigate }) {
                   </button>
                 )
               })}
+              <div className="notif-head">Account</div>
+              <button
+                type="button"
+                className="notif-item"
+                onClick={() => { logout(); setUserOpen(false); window.location.hash = '#/' }}
+              >
+                <LogOut size={16} /> <span>Log out</span>
+              </button>
             </div>
           )}
         </div>

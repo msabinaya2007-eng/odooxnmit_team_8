@@ -7,24 +7,25 @@ const ROLES = ['Super Admin', 'Admin', 'Staff']
 
 export function Login() {
   const { login, users } = useAuth()
+  const adminList = users.filter((u) => u.role === 'Admin')
   const staffList = users.filter((u) => u.role === 'Staff')
   const [role, setRole] = useState(ROLES[0])
-  const [workerName, setWorkerName] = useState(staffList[0]?.name ?? '')
+  const [personName, setPersonName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const people = role === 'Admin' ? adminList : staffList
 
   const submit = useCallback((e) => {
     e.preventDefault()
-    if (role === 'Staff') {
-      const w = staffList.find((u) => u.name === workerName) ?? staffList[0]
-      login({ name: w.name, role: 'Staff', workerId: w.workerId })
-    } else if (role === 'Super Admin') {
-      login({ name: 'Owner', role: 'Super Admin', workerId: null })
+    if (role === 'Super Admin') {
+      login({ name: 'Owner', role: 'Super Admin', workerId: null, department: 'Management' })
     } else {
-      login({ name: 'Plant Manager', role: 'Admin', workerId: null })
+      const w = people.find((u) => u.name === personName) ?? people[0]
+      if (!w) return
+      login({ name: w.name, role, workerId: w.workerId, department: w.department })
     }
     window.location.hash = '#/dashboard'
-  }, [role, workerName, staffList, login])
+  }, [role, personName, people, login])
 
   return (
     <div className="public-page">
@@ -51,11 +52,12 @@ export function Login() {
                 </button>
               ))}
             </div>
-            {role === 'Staff' && (
+            {role !== 'Super Admin' && (
               <div className="field">
-                <span><label htmlFor="login-worker">Worker</label></span>
-                <select id="login-worker" required value={workerName} onChange={(e) => setWorkerName(e.target.value)}>
-                  {staffList.map((w) => <option key={w.workerId} value={w.name}>{w.name}</option>)}
+                <span><label htmlFor="login-person">{role === 'Admin' ? 'Manager' : 'Worker'}</label></span>
+                <select id="login-person" required value={personName} onChange={(e) => setPersonName(e.target.value)}>
+                  <option value="">Select…</option>
+                  {people.map((w) => <option key={w.workerId ?? w.name} value={w.name}>{w.name}</option>)}
                 </select>
               </div>
             )}

@@ -1,15 +1,18 @@
 import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Clock, Plus, UserCheck, Users, UserX } from 'lucide-react'
-import { Badge, Card, DataTable, DemoTag, Field, Modal, PageHeader, SearchInput, SelectFilter, StatCard, Toolbar } from '../components/ui'
+import { Clock, Lock, UserCheck, Users, UserX } from 'lucide-react'
+import { Badge, Card, DataTable, DemoTag, PageHeader, SearchInput, SelectFilter, StatCard, Toolbar } from '../components/ui'
 import { axisProps, chartColors, gridProps, tooltipStyle } from '../components/chartTheme'
 import { useData } from '../store/DataContext'
+import { useAuth } from '../store/AuthContext'
+import { can } from '../store/permissions'
 import { weeklyAttendance } from '../data/demoData'
-import { formatINR, matchesSearch } from '../utils/format'
+import { matchesSearch } from '../utils/format'
 
-const DEPARTMENTS = ['Weaving', 'Dyeing', 'Stitching', 'Quality', 'Warehouse', 'Maintenance']
+const DEPARTMENTS = ['Weaving', 'Dyeing', 'Stitching', 'Quality', 'Warehouse', 'Maintenance', 'Stores', 'Management']
 const SHIFTS = ['Morning', 'Evening', 'Night']
 const ATTENDANCE = ['Present', 'Late', 'Absent', 'On Leave']
+const LOCK_TIP = 'Only authorised roles can edit'
 
 function nowHHMM() {
   const d = new Date()
@@ -18,11 +21,11 @@ function nowHHMM() {
 
 export function Workers() {
   const { workers, setWorkers, notify } = useData()
+  const { user } = useAuth()
+  const canMark = can(user, 'attendance.mark')
   const [query, setQuery] = useState('')
   const [dept, setDept] = useState('All')
   const [shift, setShift] = useState('All')
-  const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({ name: '', role: '', department: 'Weaving', shift: 'Morning', dailyWage: '' })
 
   const filtered = useMemo(
     () => workers.filter((w) => (dept === 'All' || w.department === dept) && (shift === 'All' || w.shift === shift) && matchesSearch(query, w.id, w.name, w.role)),
@@ -34,36 +37,18 @@ export function Workers() {
   const todayChart = [...weeklyAttendance, { day: 'Today', present: onFloor, absent: workers.length - onFloor }]
 
   const mark = (w, status) => {
+    if (!can(user, 'attendance.mark')) { notify('Only authorised roles can edit'); return }
     setWorkers((prev) => prev.map((x) => (x.id === w.id ? { ...x, status, checkIn: status === 'Present' || status === 'Late' ? (x.checkIn !== '—' ? x.checkIn : nowHHMM()) : '—' } : x)))
     notify(`${w.name} marked ${status}`)
-  }
-
-  const submit = (e) => {
-    e.preventDefault()
-    const next = Math.max(...workers.map((w) => Number(w.id.split('-')[1]))) + 1
-    const w = {
-      id: `EMP-${next}`,
-      name: form.name.trim(),
-      role: form.role.trim(),
-      department: form.department,
-      shift: form.shift,
-      status: 'Absent',
-      checkIn: '—',
-      hoursThisWeek: 0,
-      dailyWage: Number(form.dailyWage),
-    }
-    setWorkers((prev) => [...prev, w])
-    notify(`${w.name} added as ${w.id}`)
-    setOpen(false)
-    setForm({ name: '', role: '', department: 'Weaving', shift: 'Morning', dailyWage: '' })
   }
 
   return (
     <>
       <PageHeader
-        title="Workers & Attendance"
+        title="Attendance"
         subtitle="Shift roster and today's attendance register"
-        actions={<><DemoTag /><button type="button" className="btn primary" onClick={() => setOpen(true)}><Plus size={16} /> Add worker</button></>}
+        viewOnly={!canMark}
+        actions={<DemoTag />}
       />
 
       <div className="stat-grid">
@@ -89,13 +74,23 @@ export function Workers() {
               { key: 'shift', header: 'Shift', render: (w) => w.shift },
               { key: 'in', header: 'Check-in', render: (w) => w.checkIn },
               { key: 'hrs', header: 'Hrs (week)', align: 'right', render: (w) => w.hoursThisWeek },
-              { key: 'wage', header: 'Daily wage', align: 'right', render: (w) => formatINR(w.dailyWage) },
               { key: 'st', header: 'Status', render: (w) => <Badge>{w.status}</Badge> },
               {
                 key: 'mark', header: 'Mark', render: (w) => (
-                  <select className="compact-select" value={w.status} onChange={(e) => mark(w, e.target.value)} aria-label={`Attendance for ${w.name}`}>
-                    {ATTENDANCE.map((a) => <option key={a}>{a}</option>)}
-                  </select>
+                  canMark
+                    ? (
+                      <select className="compact-select" value={w.status} onChange={(e) => mark(w, e.target.value)} aria-label={`Attendance for ${w.name}`}>
+                        {ATTENDANCE.map((a) => <option key={a}>{a}</option>)}
+                      </select>
+                    )
+                    : (
+                      <span className="row-actions">
+                        <select className="compact-select" value={w.status} disabled title={LOCK_TIP} aria-label={`Attendance for ${w.name}`}>
+                          {ATTENDANCE.map((a) => <option key={a}>{a}</option>)}
+                        </select>
+                        <Lock size={14} className="muted" aria-hidden="true" />
+                      </span>
+                    )
                 ),
               },
             ]}
@@ -125,25 +120,6 @@ export function Workers() {
           </ul>
         </Card>
       </div>
-
-      <Modal
-        open={open}
-        title="Add worker"
-        onClose={() => setOpen(false)}
-        footer={<><button type="button" className="btn secondary" onClick={() => setOpen(false)}>Cancel</button><button type="submit" form="worker-form" className="btn primary">Add worker</button></>}
-      >
-        <form id="worker-form" className="form-grid" onSubmit={submit}>
-          <Field label="Full name"><input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-          <Field label="Role"><input required value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder="e.g. Loom Operator" /></Field>
-          <Field label="Department">
-            <select value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })}>{DEPARTMENTS.map((d) => <option key={d}>{d}</option>)}</select>
-          </Field>
-          <Field label="Shift">
-            <select value={form.shift} onChange={(e) => setForm({ ...form, shift: e.target.value })}>{SHIFTS.map((s) => <option key={s}>{s}</option>)}</select>
-          </Field>
-          <Field label="Daily wage (₹)"><input required type="number" min={0} value={form.dailyWage} onChange={(e) => setForm({ ...form, dailyWage: e.target.value })} /></Field>
-        </form>
-      </Modal>
     </>
   )
 }

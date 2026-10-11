@@ -30,6 +30,7 @@ export function DataProvider({ children }) {
   const [workers, setWorkers] = useState(demo.workers)
   const [invoices, setInvoices] = useState(demo.invoices)
   const [maintenanceTickets, setMaintenanceTickets] = useState([])
+  const [salaryMeta, setSalaryMeta] = useState({})
   const [settings, setSettings] = useState(defaultSettings)
   const [toasts, setToasts] = useState([])
 
@@ -55,6 +56,7 @@ export function DataProvider({ children }) {
     setWorkers(demo.workers)
     setInvoices(demo.invoices)
     setMaintenanceTickets([])
+    setSalaryMeta({})
     setSettings(defaultSettings)
     return defaultSettings
   }, [])
@@ -63,10 +65,10 @@ export function DataProvider({ children }) {
     () => ({
       orders, setOrders, materials, setMaterials, machines, setMachines, batches, setBatches,
       inspections, setInspections, finishedGoods, setFinishedGoods, dispatches, setDispatches,
-      workers, setWorkers, invoices, setInvoices, maintenanceTickets, setMaintenanceTickets, settings, setSettings,
+      workers, setWorkers, invoices, setInvoices, maintenanceTickets, setMaintenanceTickets, salaryMeta, setSalaryMeta, settings, setSettings,
       isLowStock, toasts, notify, resetDemoData,
     }),
-    [orders, materials, machines, batches, inspections, finishedGoods, dispatches, workers, invoices, maintenanceTickets, settings, isLowStock, toasts, notify, resetDemoData],
+    [orders, materials, machines, batches, inspections, finishedGoods, dispatches, workers, invoices, maintenanceTickets, salaryMeta, settings, isLowStock, toasts, notify, resetDemoData],
   )
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

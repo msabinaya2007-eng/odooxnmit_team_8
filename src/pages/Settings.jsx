@@ -2,9 +2,12 @@ import { useState } from 'react'
 import { Bell, Building2, Database, RotateCcw, Save, SlidersHorizontal } from 'lucide-react'
 import { Card, Field, PageHeader, Toggle } from '../components/ui'
 import { useData } from '../store/DataContext'
+import { useAuth } from '../store/AuthContext'
+import { can } from '../store/permissions'
 
 export function SettingsPage() {
   const { settings, setSettings, resetDemoData, notify } = useData()
+  const { user } = useAuth()
   const [draft, setDraft] = useState(settings)
   const [confirmReset, setConfirmReset] = useState(false)
 
@@ -13,6 +16,7 @@ export function SettingsPage() {
 
   const save = (e) => {
     e.preventDefault()
+    if (!can(user, 'settings.edit')) { notify('Only authorised roles can edit'); return }
     setSettings(draft)
     notify('Settings saved for this session')
   }
@@ -64,7 +68,7 @@ export function SettingsPage() {
             <div className="confirm-row">
               <span>Reset all pages to the original demo data?</span>
               <button type="button" className="btn secondary small" onClick={() => setConfirmReset(false)}>Cancel</button>
-              <button type="button" className="btn danger small" onClick={() => { setDraft(resetDemoData()); setConfirmReset(false); notify('Demo data reset') }}>Reset</button>
+              <button type="button" className="btn danger small" onClick={() => { if (!can(user, 'settings.edit')) { notify('Only authorised roles can edit'); return } setDraft(resetDemoData()); setConfirmReset(false); notify('Demo data reset') }}>Reset</button>
             </div>
           ) : (
             <button type="button" className="btn secondary" onClick={() => setConfirmReset(true)}><RotateCcw size={16} /> Reset demo data</button>

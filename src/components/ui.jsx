@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { Search, X } from 'lucide-react'
 
 /* ---------- Page header ---------- */
-export function PageHeader({ title, subtitle, actions }) {
+export function PageHeader({ title, subtitle, actions, viewOnly }) {
   return (
     <div className="page-header">
       <div>
-        <h1>{title}</h1>
+        <div className="page-title-row">
+          <h1>{title}</h1>
+          {viewOnly && <Badge tone="slate">View only</Badge>}
+        </div>
         {subtitle && <p className="muted">{subtitle}</p>}
       </div>
       {actions && <div className="page-actions">{actions}</div>}
